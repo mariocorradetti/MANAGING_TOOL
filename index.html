@@ -1,0 +1,4148 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IOS PNRR · Control Room</title>
+<style>
+  :root{
+    --bg:#f5f7fa;--bg2:#eef1f6;--card:#fff;--line:#e5e9f0;--line2:#eef1f6;
+    --text:#1e293b;--text2:#475569;--muted:#6b7280;--muted2:#94a3b8;
+    --accent:#4f46e5;--accent-bg:#eef2ff;
+    --green:#16a34a;--green-bg:#ecfdf5;--green-bd:#86efac;
+    --yellow:#d97706;--yellow-bg:#fffbeb;--yellow-bd:#fcd34d;
+    --red:#dc2626;--red-bg:#fef2f2;--red-bd:#fca5a5;
+    --orange:#ea580c;--orange-bg:#fff7ed;--orange-bd:#fdba74;
+    --gray:#64748b;--gray-bg:#f1f5f9;--gray-bd:#cbd5e1;
+    --shadow-sm:0 1px 2px rgba(15,23,42,.04);
+    --shadow:0 2px 8px rgba(15,23,42,.06);
+    --shadow-lg:0 8px 24px rgba(15,23,42,.10);
+  }
+  [data-theme="dark"]{
+    --bg:#0f172a;--bg2:#1e293b;--card:#1e293b;--line:#334155;--line2:#293548;
+    --text:#e2e8f0;--text2:#cbd5e1;--muted:#94a3b8;--muted2:#64748b;
+    --accent:#818cf8;--accent-bg:#1e1b4b;
+    --green:#4ade80;--green-bg:#052e16;--green-bd:#166534;
+    --yellow:#fbbf24;--yellow-bg:#422006;--yellow-bd:#854d0e;
+    --red:#f87171;--red-bg:#450a0a;--red-bd:#991b1b;
+    --orange:#fb923c;--orange-bg:#431407;--orange-bd:#9a3412;
+    --gray:#94a3b8;--gray-bg:#1e293b;--gray-bd:#475569;
+    --shadow-sm:0 1px 2px rgba(0,0,0,.3);
+    --shadow:0 2px 8px rgba(0,0,0,.4);
+    --shadow-lg:0 8px 24px rgba(0,0,0,.5);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+       background:var(--bg);color:var(--text);font-size:14.5px;line-height:1.5}
+  header{background:linear-gradient(135deg,#1e1b4b,#312e81 50%,#4338ca);
+         color:#fff;padding:14px 24px;box-shadow:var(--shadow);
+         position:sticky;top:0;z-index:60}
+  .head-row{max-width:1700px;margin:0 auto;display:flex;align-items:center;
+            justify-content:space-between;gap:16px;flex-wrap:wrap}
+  header h1{margin:0;font-size:18px;font-weight:700;
+            display:flex;align-items:center;gap:9px}
+  header .sub{opacity:.8;font-size:12px;margin-top:2px}
+  header .sub b{color:#c7d2fe}
+  .theme-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
+    color:#fff;width:36px;height:36px;border-radius:10px;cursor:pointer;
+    font-size:16px;display:flex;align-items:center;justify-content:center}
+  .datasource{background:var(--card);border-bottom:1px solid var(--line);
+    padding:10px 24px;font-size:12.5px;display:flex;align-items:center;
+    justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .datasource .status{display:flex;align-items:center;gap:10px;color:var(--muted);
+    flex-wrap:wrap}
+  .datasource .status b{color:var(--text)}
+  .ds-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;
+    border-radius:8px;background:var(--green-bg);font-size:11.5px;font-weight:600;
+    border:1px solid var(--green-bd);color:var(--green)}
+  .ds-chip.warn{background:var(--orange-bg);color:var(--orange);
+    border-color:var(--orange-bd)}
+  .datasource .dot{width:8px;height:8px;border-radius:50%;background:var(--gray)}
+  .datasource .dot.ok{background:var(--green);box-shadow:0 0 0 3px var(--green-bg)}
+  .datasource .dot.warn{background:var(--orange)}
+  .datasource .actions{display:flex;gap:8px;flex-wrap:wrap}
+  .datasource button{padding:8px 14px;border-radius:8px;font-size:12.5px;
+    font-weight:600;cursor:pointer;font-family:inherit;
+    border:1px solid var(--line);background:var(--bg2);color:var(--text2);
+    display:inline-flex;align-items:center;gap:6px;transition:.15s}
+  .datasource button:hover{background:var(--bg);border-color:var(--muted2)}
+  .datasource button.primary{background:var(--accent);color:#fff;
+    border-color:var(--accent);box-shadow:0 2px 6px rgba(79,70,229,.25)}
+  .datasource button.primary:hover{background:#4338ca}
+  .datasource button.export{background:var(--green);color:#fff;border-color:var(--green)}
+  .datasource button.export:hover{background:#15803d}
+  .datasource button.danger{color:var(--red);border-color:var(--red-bd)}
+  .datasource button.danger:hover{background:var(--red-bg)}
+  .tabs{background:var(--card);border-bottom:1px solid var(--line);
+        position:sticky;top:0;z-index:55;box-shadow:var(--shadow-sm)}
+  .tabs-inner{max-width:1700px;margin:0 auto;padding:0 24px;
+              display:flex;gap:4px;overflow-x:auto}
+  .tab{padding:14px 18px;font-size:13.5px;font-weight:600;color:var(--muted);
+       cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;
+       display:flex;align-items:center;gap:8px;background:transparent;
+       border-top:none;border-left:none;border-right:none;font-family:inherit}
+  .tab:hover{color:var(--text2);background:var(--bg2)}
+  .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+  .tab .badge{background:var(--bg2);color:var(--muted);padding:1px 8px;
+    border-radius:10px;font-size:11px;font-weight:700}
+  .tab.active .badge{background:var(--accent-bg);color:var(--accent)}
+  .container{max-width:1700px;margin:0 auto;padding:20px 24px 60px}
+  .panel{display:none}.panel.active{display:block}
+  .dropzone{background:var(--card);border:2px dashed var(--line);
+    border-radius:16px;padding:50px 30px;text-align:center;margin-bottom:20px;
+    transition:.2s}
+  .dropzone.over{border-color:var(--accent);background:var(--accent-bg);
+    transform:scale(1.005)}
+  .dropzone .ico{font-size:56px;margin-bottom:12px;opacity:.6}
+  .dropzone h3{margin:0 0 6px;font-size:17px;color:var(--text)}
+  .dropzone p{margin:6px 0 20px;color:var(--muted);font-size:13.5px;
+    line-height:1.55}
+  .dropzone .big-buttons{display:flex;gap:12px;justify-content:center;
+    flex-wrap:wrap;margin-bottom:20px}
+  .dropzone .big-btn{padding:14px 26px;border-radius:12px;cursor:pointer;
+    font-size:14.5px;font-weight:700;font-family:inherit;
+    border:1.5px solid var(--accent);background:var(--accent);color:#fff;
+    display:inline-flex;align-items:center;gap:9px;transition:.15s;
+    box-shadow:0 4px 12px rgba(79,70,229,.25)}
+  .dropzone .big-btn:hover{background:#4338ca;transform:translateY(-2px);
+    box-shadow:0 6px 16px rgba(79,70,229,.35)}
+  .dropzone .big-btn.sec{background:var(--card);color:var(--text2);
+    border-color:var(--line);box-shadow:var(--shadow-sm)}
+  .dropzone .big-btn.sec:hover{background:var(--bg2);border-color:var(--muted2);
+    transform:translateY(-2px);color:var(--text)}
+  .dropzone .files{display:flex;gap:14px;justify-content:center;
+    flex-wrap:wrap;margin-top:16px}
+  .dropzone .file-card{background:var(--bg2);border-radius:10px;
+    padding:10px 16px;font-size:12px;color:var(--text2);
+    border:1px solid var(--line);min-width:180px}
+  .dropzone .file-card b{display:block;font-size:13px;color:var(--text);
+    margin-bottom:4px}
+  .toolbar{background:var(--card);border-radius:14px;padding:12px 14px;
+           margin-bottom:16px;box-shadow:var(--shadow-sm);
+           display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+           border:1px solid var(--line)}
+  .search-box{flex:1;min-width:200px;position:relative}
+  .search-box input{width:100%;padding:10px 14px 10px 38px;font-size:14px;
+    border:1.5px solid var(--line);border-radius:10px;font-family:inherit;
+    background:var(--bg2);color:var(--text)}
+  .search-box input:focus{outline:none;border-color:var(--accent);
+    background:var(--card);box-shadow:0 0 0 3px rgba(99,102,241,.12)}
+  .search-box .ico{position:absolute;left:13px;top:50%;transform:translateY(-50%);
+    font-size:14px;color:var(--muted2);pointer-events:none}
+  .view-toggle{display:flex;background:var(--bg2);border-radius:10px;
+    padding:3px;gap:2px}
+  .view-toggle button{border:none;background:transparent;padding:7px 13px;
+    border-radius:8px;cursor:pointer;font-size:12.5px;font-weight:600;
+    color:var(--muted);font-family:inherit;display:flex;align-items:center;gap:6px}
+  .view-toggle button.active{background:var(--card);color:var(--accent);
+    box-shadow:var(--shadow-sm)}
+  .btn{padding:9px 15px;border:none;border-radius:10px;cursor:pointer;
+    font-size:13px;font-weight:600;font-family:inherit;
+    display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+  .btn-primary{background:var(--accent);color:#fff;
+    box-shadow:0 2px 6px rgba(79,70,229,.25)}
+  .btn-primary:hover{background:#4338ca}
+  .btn-sec{background:var(--bg2);color:var(--text2);
+    border:1.5px solid var(--line)}
+  .btn-sec:hover{background:var(--bg);border-color:var(--muted2)}
+  .btn-danger{background:var(--card);color:var(--red);
+    border:1.5px solid var(--red-bd)}
+  .btn-danger:hover{background:var(--red-bg)}
+  .filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+  .filters .label{font-size:11px;font-weight:700;color:var(--muted2);
+    text-transform:uppercase;letter-spacing:.5px;margin-right:2px;margin-left:8px}
+  .filters .label:first-child{margin-left:0}
+  .chip{padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;
+    cursor:pointer;border:1.5px solid var(--line);background:var(--card);
+    color:var(--muted);user-select:none;display:inline-flex;
+    align-items:center;gap:5px}
+  .chip:hover{border-color:var(--accent);color:var(--accent)}
+  .chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .chip .dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+  .chip.act-clear{background:transparent;border-style:dashed;color:var(--muted2)}
+  .chip.act-clear:hover{color:var(--red);border-color:var(--red);background:var(--red-bg)}
+  .week-section{margin-bottom:24px}
+  .week-head{display:flex;align-items:center;gap:14px;margin-bottom:10px;
+    padding:0 4px;flex-wrap:wrap}
+  .week-title{font-size:16px;font-weight:700;display:flex;align-items:center;gap:10px}
+  .week-title .badge-count{background:var(--accent-bg);color:var(--accent);
+    padding:2px 10px;border-radius:12px;font-size:11.5px;font-weight:700}
+  .week-prog{flex:1;max-width:240px;min-width:140px;display:flex;
+    align-items:center;gap:10px}
+  .week-prog .bar{flex:1;height:8px;background:var(--line);
+    border-radius:5px;overflow:hidden}
+  .week-prog .fill{height:100%;
+    background:linear-gradient(90deg,#10b981,#059669);border-radius:5px;
+    transition:width .4s}
+  .week-prog .pct{font-size:12px;font-weight:700;color:var(--green);
+    min-width:38px;text-align:right}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));
+    gap:12px}
+  .card{background:var(--card);border-radius:14px;padding:14px 15px 13px;
+    box-shadow:var(--shadow-sm);border:1px solid var(--line);
+    transition:.18s;display:flex;flex-direction:column;gap:9px}
+  .card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px)}
+  .card.done{opacity:.7}
+  .card.done .desc{text-decoration:line-through;text-decoration-color:var(--muted2);
+    color:var(--muted)}
+  .card-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .card-menu{display:flex;gap:2px;opacity:.25;transition:.15s}
+  .card:hover .card-menu{opacity:1}
+  .icon-btn{background:transparent;border:none;width:26px;height:26px;
+    border-radius:6px;cursor:pointer;color:var(--muted);font-size:13px;
+    display:flex;align-items:center;justify-content:center;transition:.15s}
+  .icon-btn:hover{background:var(--bg2);color:var(--text)}
+  .icon-btn.del:hover{background:var(--red-bg);color:var(--red)}
+  .desc{font-size:14px;font-weight:600;line-height:1.4}
+  .note{font-size:12px;color:var(--muted);background:var(--bg2);
+    border-radius:8px;padding:7px 10px;border-left:2px solid var(--line);
+    line-height:1.45}
+  .note::before{content:"📝 ";margin-right:1px}
+  .meta{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted);
+    align-items:center;margin-top:auto}
+  .meta-item{display:flex;align-items:center;gap:5px}
+  .meta-item b{color:var(--text);font-weight:600}
+  .avatar{width:20px;height:20px;border-radius:50%;background:var(--accent-bg);
+    color:var(--accent);font-size:10px;font-weight:700;display:inline-flex;
+    align-items:center;justify-content:center;flex-shrink:0;
+    border:1.5px solid var(--card);box-shadow:0 0 0 1px var(--accent-bg)}
+  .due-soon{color:var(--orange)!important}
+  .due-over{color:var(--red)!important}
+  .due-soon b,.due-over b{color:inherit}
+  .status-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;
+    border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;
+    border:1.5px solid transparent;user-select:none;white-space:nowrap}
+  .status-pill:hover{transform:scale(1.05)}
+  .status-pill[data-st="Fatto"]{background:var(--green-bg);color:var(--green);border-color:var(--green-bd)}
+  .status-pill[data-st="In corso"]{background:var(--yellow-bg);color:var(--yellow);border-color:var(--yellow-bd)}
+  .status-pill[data-st="Da fare"]{background:var(--red-bg);color:var(--red);border-color:var(--red-bd)}
+  .status-pill[data-st="Blocked"]{background:var(--orange-bg);color:var(--orange);border-color:var(--orange-bd)}
+  .status-pill[data-st="TBD"]{background:var(--gray-bg);color:var(--gray);border-color:var(--gray-bd)}
+  .progress-row{display:flex;align-items:center;gap:8px}
+  .progress-row .bar{flex:1;height:6px;background:var(--line);
+    border-radius:3px;overflow:hidden}
+  .progress-row .fill{height:100%;border-radius:3px;
+    background:linear-gradient(90deg,#6366f1,#4f46e5)}
+  .progress-row .fill.g{background:linear-gradient(90deg,#10b981,#059669)}
+  .progress-row .fill.y{background:linear-gradient(90deg,#f59e0b,#d97706)}
+  .progress-row .fill.r{background:linear-gradient(90deg,#ef4444,#dc2626)}
+  .progress-row .pct{font-size:11px;font-weight:700;color:var(--muted);
+    min-width:34px;text-align:right}
+  .kanban{display:grid;grid-template-columns:repeat(5,minmax(250px,1fr));
+    gap:12px;overflow-x:auto;padding-bottom:8px}
+  .kanban-col{background:var(--bg2);border-radius:14px;padding:10px;
+    min-height:200px;display:flex;flex-direction:column;gap:9px}
+  .kanban-head{display:flex;align-items:center;justify-content:space-between;
+    padding:3px 5px 6px;font-weight:700;font-size:13.5px}
+  .kanban-head .count{background:var(--card);color:var(--muted);padding:1px 8px;
+    border-radius:10px;font-size:11.5px;font-weight:700}
+  .kanban-col[data-st="Da fare"] .kanban-head{color:var(--red)}
+  .kanban-col[data-st="In corso"] .kanban-head{color:var(--yellow)}
+  .kanban-col[data-st="Fatto"] .kanban-head{color:var(--green)}
+  .kanban-col[data-st="Blocked"] .kanban-head{color:var(--orange)}
+  .kanban-col[data-st="TBD"] .kanban-head{color:var(--gray)}
+  .kanban-empty{padding:20px;text-align:center;color:var(--muted2);
+    font-size:12px;font-style:italic}
+  .hw-section{margin-bottom:26px}
+  .hw-section-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;
+    padding:0 4px}
+  .hw-section-head h2{margin:0;font-size:15px;font-weight:700;
+    display:flex;align-items:center;gap:8px}
+  .hw-section-head .badge-count{background:var(--accent-bg);color:var(--accent);
+    padding:2px 10px;border-radius:12px;font-size:11.5px;font-weight:700}
+  .hw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));
+    gap:12px}
+  .hw-card{background:var(--card);border-radius:14px;padding:14px;
+    box-shadow:var(--shadow-sm);border:1px solid var(--line);
+    border-top:3px solid var(--muted2);display:flex;flex-direction:column;
+    gap:10px;transition:.18s}
+  .hw-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px)}
+  .hw-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+  .hw-name{font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px;
+    letter-spacing:-.2px}
+  .hw-name .type-tag{padding:2px 8px;border-radius:6px;font-size:10px;
+    font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+  .hw-sub{font-size:11px;color:var(--muted);margin-top:3px;
+    display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .hw-sub .sep{color:var(--line2)}
+  .hw-sub b{color:var(--text2);font-weight:700}
+  .hw-sub .modello-badge{padding:1px 7px;border-radius:5px;background:var(--accent-bg);
+    color:var(--accent);font-weight:700;font-size:10px}
+  .hw-sn code{background:var(--bg2);padding:1px 6px;border-radius:4px;
+    font-family:Consolas,monospace;font-size:11px;color:var(--text2)}
+  .hw-flags{display:flex;flex-wrap:wrap;gap:5px}
+  .flag{padding:3px 9px;border-radius:12px;font-size:10.5px;font-weight:700;
+    display:inline-flex;align-items:center;gap:4px;border:1px solid transparent}
+  .flag.yes{background:var(--green-bg);color:var(--green);border-color:var(--green-bd)}
+  .flag.no{background:var(--red-bg);color:var(--red);border-color:var(--red-bd)}
+  .flag.wip{background:var(--yellow-bg);color:var(--yellow);border-color:var(--yellow-bd)}
+  .flag.na{background:var(--gray-bg);color:var(--gray);border-color:var(--gray-bd)}
+  .flag.warn{background:var(--orange-bg);color:var(--orange);border-color:var(--orange-bd)}
+  .flag.custom{background:transparent;color:var(--text2);
+    border:1px dashed var(--line);font-weight:600}
+  .flag.custom b{color:var(--accent);font-weight:700;margin-right:3px}
+  .hw-field{
+    display:flex;align-items:center;justify-content:space-between;
+    gap:8px;font-size:12.5px;color:var(--text2);
+    padding:6px 10px;background:var(--bg2);border-radius:8px;
+  }
+  .hw-field .k{font-size:11px;font-weight:700;color:var(--muted);
+    text-transform:uppercase;letter-spacing:.4px}
+  .hw-field .v{font-weight:700;color:var(--text)}
+  .hw-field.due-over .v{color:var(--red)}
+  .hw-field.due-soon .v{color:var(--orange)}
+  .dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+    gap:16px;margin-bottom:24px}
+  .dash-card{background:var(--card);border-radius:14px;padding:18px;
+    box-shadow:var(--shadow-sm);border:1px solid var(--line)}
+  .dash-card h3{margin:0 0 14px;font-size:14px;font-weight:700;
+    display:flex;align-items:center;gap:8px;color:var(--text);
+    padding-bottom:10px;border-bottom:1px solid var(--line)}
+  .dash-card h3 .ico{font-size:16px}
+  .dash-card h4{margin:14px 0 8px;font-size:12px;font-weight:700;
+    color:var(--muted2);text-transform:uppercase;letter-spacing:.4px}
+  .counters{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));
+    gap:10px;margin-bottom:14px}
+  .counter{background:var(--bg2);border-radius:10px;padding:10px 12px;text-align:center}
+  .counter .n{font-size:22px;font-weight:800;line-height:1.1}
+  .counter .l{font-size:10.5px;font-weight:600;color:var(--muted);
+    text-transform:uppercase;letter-spacing:.4px;margin-top:3px}
+  .counter.ok .n{color:var(--green)}
+  .counter.wip .n{color:var(--yellow)}
+  .counter.todo .n{color:var(--red)}
+  .counter.blk .n{color:var(--orange)}
+  .stat-table{width:100%;border-collapse:collapse;font-size:13px}
+  .stat-table th,.stat-table td{padding:8px 10px;text-align:left;
+    border-bottom:1px solid var(--line2)}
+  .stat-table th{font-size:11px;font-weight:700;color:var(--muted);
+    text-transform:uppercase;letter-spacing:.4px;background:var(--bg2)}
+  .stat-table td.num{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+  .stat-table td.yes{color:var(--green)}
+  .stat-table td.no{color:var(--red)}
+  .stat-table td.na{color:var(--muted2)}
+  .stat-table tr:hover{background:var(--bg2)}
+  .bar-mini{display:flex;height:10px;border-radius:5px;overflow:hidden;
+    background:var(--bg2);margin-top:2px}
+  .bar-mini .seg{transition:.3s}
+  .bar-mini .seg.yes{background:var(--green)}
+  .bar-mini .seg.no{background:var(--red)}
+  .bar-mini .seg.na{background:var(--gray-bd)}
+  .empty{background:var(--card);border-radius:14px;padding:50px 20px;
+    text-align:center;color:var(--muted);border:1px dashed var(--line)}
+  .empty .ico{font-size:40px;margin-bottom:10px;opacity:.4}
+  .empty h3{margin:0 0 4px;color:var(--text);font-size:15px}
+  .modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.55);
+    backdrop-filter:blur(3px);display:none;align-items:flex-start;
+    justify-content:center;z-index:100;padding:30px 20px;overflow-y:auto}
+  .modal-bg.open{display:flex;animation:fadeIn .18s}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .modal{background:var(--card);border-radius:16px;max-width:680px;width:100%;
+    box-shadow:0 24px 60px rgba(0,0,0,.3);overflow:hidden;
+    animation:slideUp .22s;border:1px solid var(--line)}
+  @keyframes slideUp{from{transform:translateY(20px);opacity:0}
+    to{transform:translateY(0);opacity:1}}
+  .modal-head{padding:16px 22px;background:linear-gradient(135deg,#4f46e5,#6366f1);
+    color:#fff}
+  .modal-head h2{margin:0;font-size:16px;font-weight:700}
+  .modal-head p{margin:4px 0 0;font-size:12px;opacity:.85}
+  .modal-body{padding:18px 22px}
+  .field{margin-bottom:13px}
+  .field label{display:block;font-size:11px;font-weight:700;color:var(--text2);
+    margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
+  .field input,.field select,.field textarea{width:100%;padding:9px 12px;
+    border:1.5px solid var(--line);border-radius:9px;font-size:13.5px;
+    font-family:inherit;background:var(--bg2);color:var(--text)}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;
+    border-color:var(--accent);background:var(--card);
+    box-shadow:0 0 0 3px rgba(99,102,241,.12)}
+  .field textarea{min-height:65px;resize:vertical}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+  .modal-actions{padding:13px 22px;background:var(--bg2);
+    border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:9px}
+  .section-title{font-size:11.5px;font-weight:800;color:var(--accent);
+    text-transform:uppercase;letter-spacing:.5px;margin:18px 0 10px;
+    padding-bottom:6px;border-bottom:1px solid var(--line)}
+  .custom-row{display:grid;grid-template-columns:1fr 1.4fr auto;
+    gap:8px;margin-bottom:7px;align-items:center}
+  .custom-row input{padding:8px 10px;font-size:13px;
+    border:1.5px solid var(--line);border-radius:8px;
+    font-family:inherit;background:var(--bg2);color:var(--text)}
+  .custom-row input:focus{outline:none;border-color:var(--accent);
+    background:var(--card);box-shadow:0 0 0 3px rgba(99,102,241,.12)}
+  .custom-row .c-del{background:transparent;border:none;
+    width:30px;height:30px;border-radius:8px;cursor:pointer;
+    color:var(--red);font-size:16px;display:flex;align-items:center;
+    justify-content:center;transition:.15s}
+  .custom-row .c-del:hover{background:var(--red-bg)}
+  .btn-add-custom{width:100%;padding:9px;border:1.5px dashed var(--line);
+    background:transparent;color:var(--muted);font-size:12.5px;
+    font-weight:600;cursor:pointer;border-radius:9px;font-family:inherit;
+    transition:.15s;margin-top:4px}
+  .btn-add-custom:hover{border-color:var(--accent);color:var(--accent);
+    background:var(--accent-bg);border-style:solid}
+  .export-option{background:var(--bg2);border:1.5px solid var(--line);
+    border-radius:12px;padding:16px 18px;margin-bottom:12px;
+    display:flex;align-items:center;justify-content:space-between;gap:14px;
+    transition:.15s;cursor:pointer}
+  .export-option:hover{border-color:var(--accent);background:var(--accent-bg)}
+  .export-option .info{flex:1}
+  .export-option .info b{display:block;font-size:14px;color:var(--text);
+    margin-bottom:3px;font-weight:700}
+  .export-option .info span{font-size:12px;color:var(--muted)}
+  .export-option .btn-dl{padding:10px 18px;border-radius:9px;
+    background:var(--green);color:#fff;border:none;font-weight:700;
+    font-family:inherit;font-size:13px;cursor:pointer;
+    display:flex;align-items:center;gap:7px;white-space:nowrap}
+  .export-option .btn-dl:hover{background:#15803d}
+  .toast{position:fixed;bottom:24px;left:50%;
+    transform:translateX(-50%) translateY(80px);
+    background:#0f172a;color:#fff;padding:11px 20px;border-radius:12px;
+    font-size:13px;font-weight:600;box-shadow:0 12px 32px rgba(0,0,0,.35);
+    opacity:0;transition:.3s cubic-bezier(.68,-.55,.27,1.55);
+    pointer-events:none;z-index:200;
+    display:flex;align-items:center;gap:7px;max-width:90vw;text-align:center}
+  [data-theme="dark"] .toast{background:#334155}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .hint{text-align:center;color:var(--muted2);font-size:12px;margin-top:22px;
+    line-height:1.6}
+  .hint b{color:var(--muted)}
+  .save-indicator{position:fixed;bottom:20px;left:20px;background:var(--card);
+    border:1px solid var(--line);border-radius:10px;padding:8px 14px;
+    font-size:12px;font-weight:600;box-shadow:var(--shadow-lg);
+    display:flex;align-items:center;gap:8px;z-index:150;
+    transition:.3s;opacity:0;pointer-events:none;color:var(--muted)}
+  .save-indicator.show{opacity:1}
+  .save-indicator.saved .dot{background:var(--green)}
+  .save-indicator.warn .dot{background:var(--orange)}
+  .save-indicator .dot{width:8px;height:8px;border-radius:50%;background:var(--gray)}
+  @media (max-width:900px){
+    .container{padding:14px 12px 60px}
+    header{padding:12px}
+    header h1{font-size:15px}
+    .tabs-inner{padding:0 12px}
+    .tab{padding:12px 12px;font-size:12.5px}
+    .cards,.hw-grid,.dash-grid{grid-template-columns:1fr}
+    .kanban{grid-template-columns:1fr}
+    .datasource{padding:8px 12px}
+    .row2,.custom-row{grid-template-columns:1fr}
+    .custom-row{grid-template-columns:1fr 1fr auto}
+  }
+  @media print{
+    header,.tabs,.toolbar,.filters,.card-menu,.datasource,
+    .view-toggle,.theme-btn,.hint,.btn,.save-indicator,
+    .dropzone .big-buttons{display:none!important}
+    body{background:#fff}
+  }
+.toggle-group{display:inline-flex;background:var(--bg2);border-radius:10px;
+  padding:3px;gap:2px;border:1.5px solid var(--line);width:100%}
+.toggle-group .toggle-btn{flex:1;padding:7px 14px;border:none;background:transparent;
+  border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;
+  color:var(--muted);font-family:inherit;transition:.15s;
+  display:flex;align-items:center;justify-content:center;gap:5px}
+.toggle-group .toggle-btn:hover{color:var(--text2);background:var(--card)}
+.toggle-group .toggle-btn.active{color:#fff}
+.toggle-group .toggle-btn.active[data-val="YES"]{
+  background:var(--green);box-shadow:0 2px 6px rgba(22,163,74,.3)}
+.toggle-group .toggle-btn.active[data-val="NO"]{
+  background:var(--red);box-shadow:0 2px 6px rgba(220,38,38,.3)}
+.owner-chips{display:flex;flex-wrap:wrap;gap:6px;min-height:32px;
+  padding:6px 8px;background:var(--bg2);border:1.5px solid var(--line);
+  border-radius:9px;margin-bottom:6px}
+.owner-chips:empty::before{content:"Nessun owner assegnato";
+  color:var(--muted2);font-size:12px;font-style:italic;padding:4px}
+.owner-chip{display:inline-flex;align-items:center;gap:6px;
+  padding:4px 8px 4px 10px;background:var(--accent-bg);color:var(--accent);
+  border-radius:20px;font-size:12.5px;font-weight:700;
+  border:1px solid #c7d2fe}
+.owner-chip .avatar-mini{width:18px;height:18px;border-radius:50%;
+  background:var(--accent);color:#fff;font-size:9.5px;font-weight:800;
+  display:inline-flex;align-items:center;justify-content:center}
+.owner-chip .rm{background:transparent;border:none;cursor:pointer;
+  color:var(--accent);font-size:15px;font-weight:700;line-height:1;
+  padding:0 2px;border-radius:4px;font-family:inherit}
+.owner-chip .rm:hover{background:rgba(99,102,241,.15)}
+.btn-add-owner{padding:8px 12px;border:1.5px dashed var(--line);
+  background:transparent;color:var(--muted);font-size:12.5px;
+  font-weight:600;cursor:pointer;border-radius:9px;font-family:inherit;
+  transition:.15s;width:100%}
+.btn-add-owner:hover{border-color:var(--accent);color:var(--accent);
+  background:var(--accent-bg);border-style:solid}
+.owner-picker{position:fixed;inset:0;background:rgba(15,23,42,.4);
+  display:none;align-items:center;justify-content:center;z-index:150;
+  padding:20px;backdrop-filter:blur(2px)}
+.owner-picker.open{display:flex}
+.owner-picker-box{background:var(--card);border-radius:14px;
+  max-width:380px;width:100%;max-height:80vh;overflow:hidden;
+  box-shadow:0 20px 50px rgba(0,0,0,.35);border:1px solid var(--line);
+  display:flex;flex-direction:column}
+.owner-picker-head{padding:14px 18px;border-bottom:1px solid var(--line)}
+.owner-picker-head h3{margin:0;font-size:14px;font-weight:700}
+.owner-picker-body{padding:10px;overflow-y:auto;flex:1}
+.owner-pick-item{padding:9px 12px;border-radius:8px;cursor:pointer;
+  display:flex;align-items:center;gap:8px;font-size:13.5px;transition:.12s}
+.owner-pick-item:hover{background:var(--accent-bg);color:var(--accent)}
+.owner-pick-item.used{opacity:.4}
+.owner-pick-item .avatar-mini{width:24px;height:24px;border-radius:50%;
+  background:var(--accent-bg);color:var(--accent);font-size:10px;
+  font-weight:800;display:inline-flex;align-items:center;
+  justify-content:center;flex-shrink:0}
+.owner-pick-item .new-person{color:var(--green);font-weight:700}
+.owner-picker-foot{padding:10px 14px;border-top:1px solid var(--line);
+  display:flex;justify-content:flex-end}
+.owner-pick-item .row-actions{display:flex;gap:3px;margin-left:auto;
+  opacity:0;transition:.15s}
+.owner-pick-item:hover .row-actions{opacity:1}
+.owner-pick-item .row-act{background:transparent;border:none;
+  width:26px;height:26px;border-radius:6px;cursor:pointer;
+  color:var(--muted);font-size:13px;font-family:inherit;
+  display:flex;align-items:center;justify-content:center}
+.owner-pick-item .row-act:hover{background:var(--bg2);color:var(--text)}
+.owner-pick-item .row-act.del:hover{background:var(--red-bg);color:var(--red)}
+.hw-chips{display:flex;flex-wrap:wrap;gap:6px;min-height:32px;
+  padding:6px 8px;background:var(--bg2);border:1.5px solid var(--line);
+  border-radius:9px;margin-bottom:6px}
+.hw-chips:empty::before{content:"Nessun componente collegato";
+  color:var(--muted2);font-size:12px;font-style:italic;padding:4px}
+.hw-chip{display:inline-flex;align-items:center;gap:6px;
+  padding:4px 8px 4px 10px;background:var(--bg2);color:var(--text2);
+  border-radius:20px;font-size:12.5px;font-weight:700;
+  border:1px solid var(--line)}
+.hw-chip .rm{background:transparent;border:none;cursor:pointer;
+  color:var(--muted);font-size:15px;font-weight:700;line-height:1;
+  padding:0 2px;border-radius:4px;font-family:inherit}
+.hw-chip .rm:hover{background:var(--red-bg);color:var(--red)}
+.btn-add-hw{padding:8px 12px;border:1.5px dashed var(--line);
+  background:transparent;color:var(--muted);font-size:12.5px;
+  font-weight:600;cursor:pointer;border-radius:9px;font-family:inherit;
+  transition:.15s;width:100%}
+.btn-add-hw:hover{border-color:var(--accent);color:var(--accent);
+  background:var(--accent-bg);border-style:solid}
+.hw-badge{display:inline-flex;align-items:center;gap:4px;
+  padding:2px 8px;border-radius:6px;font-size:10.5px;font-weight:700;
+  background:var(--accent-bg);color:var(--accent);
+  border:1px solid #c7d2fe;cursor:pointer;text-decoration:none}
+.hw-badge:hover{background:var(--accent);color:#fff}
+.reconnect-banner{position:fixed;top:80px;left:50%;transform:translateX(-50%);
+  z-index:180;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;
+  padding:12px 16px;border-radius:12px;box-shadow:0 8px 24px rgba(234,88,12,.35);
+  display:none;align-items:center;gap:14px;font-size:13px;font-weight:600;
+  max-width:90vw;animation:slideDown .3s}
+.reconnect-banner.show{display:flex}
+@keyframes slideDown{from{opacity:0;transform:translate(-50%,-20px)}
+  to{opacity:1;transform:translate(-50%,0)}}
+.reconnect-banner .msg{flex:1;line-height:1.4}
+.reconnect-banner .msg b{font-weight:800}
+.reconnect-banner button{padding:8px 14px;border-radius:8px;font-size:12.5px;
+  font-weight:700;font-family:inherit;cursor:pointer;border:none;
+  background:#fff;color:#ea580c;white-space:nowrap;transition:.15s}
+.reconnect-banner button:hover{background:#fff7ed;transform:translateY(-1px)}
+.reconnect-banner .close-x{background:transparent;color:#fff;
+  border:1px solid rgba(255,255,255,.4);padding:6px 10px;font-size:14px}
+.reconnect-banner .close-x:hover{background:rgba(255,255,255,.15)}
+.sort-control{
+  display:flex;gap:2px;align-items:center;background:var(--bg2);
+  border-radius:10px;padding:3px;border:1.5px solid var(--line);
+}
+.sort-control select{
+  border:none;background:transparent;font-family:inherit;font-size:12.5px;
+  font-weight:600;color:var(--text2);padding:6px 8px;border-radius:7px;
+  cursor:pointer;outline:none;max-width:140px;
+}
+.sort-control select:hover{background:var(--card)}
+.sort-control button{
+  background:transparent;border:none;width:30px;height:30px;border-radius:7px;
+  cursor:pointer;font-size:16px;font-weight:800;color:var(--accent);
+  display:flex;align-items:center;justify-content:center;font-family:inherit;
+  transition:.15s;
+}
+.sort-control button:hover{background:var(--card)}
+.sort-control button:active{transform:scale(.92)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="head-row">
+    <div>
+      <h1>🛰️ IOS AIT Manager Tool</h1>
+      <div class="sub">Resp: <b>Mario Corradetti / Marco Sisinni </b> 
+        · Agg: <span id="lastUpdate">—</span></div>
+    </div>
+    <button class="theme-btn" id="themeBtn" title="Cambia tema">🌙</button>
+  </div>
+</header>
+
+<div class="datasource">
+  <div class="status">
+    <span class="dot ok" id="dsDot"></span>
+    <span id="dsText"><b>Caricamento…</b></span>
+    <span class="ds-chip" id="chipSave">💾 Salvataggio automatico</span>
+  </div>
+  <div class="actions">
+    <button class="primary" id="btnFolder">📁 Collega cartella</button>
+    <button id="btnImport">📥 Importa CSV</button>
+    <button class="export" id="btnExport">📤 Esporta CSV</button>
+    <button class="danger" id="btnReset">🗑 Reset</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tabs-inner">
+    <button class="tab active" data-tab="tasks">🗂️ Attività <span class="badge" id="tabCountTasks">0</span></button>
+    <button class="tab" data-tab="hw">🔧 Hardware <span class="badge" id="tabCountHw">0</span></button>
+    <button class="tab" data-tab="docs">📄 Documenti <span class="badge" id="tabCountDocs">0</span></button>
+    <button class="tab" data-tab="dash">📊 Dashboard</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="dropzone" id="dropzone" style="display:none">
+    <div class="ico">📂</div>
+    <h3>Benvenuto in Control Room</h3>
+    <p>Trascina qui i tuoi file <b>hardware.csv</b>, <b>attivita.csv</b> e <b>documenti.csv</b>,<br>
+       oppure usa il pulsante per selezionarli dal computer.</p>
+    <div class="big-buttons">
+      <button class="big-btn" id="dropImportBtn">📥 Importa i CSV</button>
+      <button class="big-btn sec" id="dropSeedBtn">▶ Usa dati di esempio</button>
+    </div>
+    <div class="files">
+      <div class="file-card"><b>🔧 hardware.csv</b>giunti + schede</div>
+      <div class="file-card"><b>🗂️ attivita.csv</b>attività pianificate</div>
+      <div class="file-card"><b>📄 documenti.csv</b>documenti di progetto</div>
+    </div>
+  </div>
+
+  <div class="panel active" id="panel-tasks">
+    <div class="toolbar">
+      <div class="search-box">
+        <span class="ico">🔍</span>
+        <input type="text" id="search" placeholder="Cerca attività, owner o note…">
+      </div>
+      <div class="view-toggle" id="viewToggle">
+        <button data-view="week" class="active">📅 Settimana</button>
+        <button data-view="kanban">🗂️ Kanban</button>
+      </div>
+      <div class="sort-control">
+        <select id="sortSelect" title="Ordina per">
+          <option value="due">📅 Scadenza</option>
+          <option value="week">🗓️ Settimana</option>
+          <option value="status">🔵 Stato</option>
+          <option value="prog">📊 Progresso</option>
+          <option value="desc">🔤 Descrizione</option>
+          <option value="id">🆔 Creazione</option>
+        </select>
+        <button id="sortDirBtn" title="Cambia direzione (crescente/decrescente)">↑</button>
+      </div>
+      <button class="btn btn-primary" id="btnAdd">➕ Nuova</button>
+      <button class="btn btn-sec" id="btnSummary" title="Genera riepilogo da inviare">📊 Riepilogo</button>
+      <button class="btn btn-sec" id="btnPrint">🖨</button>
+    </div>
+    <div class="filters">
+      <span class="label">Stato</span>
+      <span class="chip" data-status="Da fare">🔴 Da fare</span>
+      <span class="chip" data-status="In corso">🟡 In corso</span>
+      <span class="chip" data-status="Fatto">🟢 Fatto</span>
+      <span class="chip" data-status="Blocked">🟠 Blocked</span>
+      <span class="chip" data-status="TBD">⚪ TBD</span>
+      <span class="chip act-clear" id="clearFilters">✕ Pulisci</span>
+    </div>
+
+    <div class="filters" id="ownerFilterRow" style="margin-top:-10px">
+      <span class="label">Persona</span>
+      <span id="ownerFilterChips"></span>
+      <span class="chip act-clear" id="clearOwnerFilter" style="display:none">✕ Pulisci persona</span>
+      <span class="chip act-clear" id="clearAllFilters" style="margin-left:auto">✕ Pulisci tutto</span>
+    </div>
+    <div id="content"></div>
+  </div>
+
+  <div class="panel" id="panel-hw">
+    <div class="filters">
+      <span class="label">Categoria</span>
+      <span id="hwFilterChips"></span>
+      <span class="chip act-clear" id="hwClear">✕ Pulisci</span>
+      <button class="btn btn-primary" id="btnAddHw" style="margin-left:auto">➕ Nuovo HW</button>
+    </div>
+    <div id="hwContent"></div>
+  </div>
+
+  <div class="panel" id="panel-docs">
+    <div class="filters">
+      <span class="label">Tipo</span>
+      <span id="docFilterChips"></span>
+      <span class="chip act-clear" id="docClear">✕ Pulisci</span>
+      <button class="btn btn-sec" id="btnExportDocs" style="margin-left:auto">📤 Esporta</button>
+      <button class="btn btn-primary" id="btnAddDoc">➕ Nuovo documento</button>
+    </div>
+    <div id="docContent"></div>
+  </div>
+
+  <div class="panel" id="panel-dash"><div id="dashContent"></div></div>
+
+  <div class="hint">
+    💾 Tutto viene salvato automaticamente nel browser (localStorage).<br>
+    A fine riunione clicca <b>📤 Esporta CSV</b> per scaricare i file aggiornati.
+  </div>
+</div>
+
+<!-- MODAL TASK -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="modalTitle">Nuova attività</h2>
+      <p>La descrizione è obbligatoria.</p>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="fId">
+      <div class="field"><label>Descrizione *</label><textarea id="fDesc"></textarea></div>
+
+      <div class="field"><label>Owner</label>
+        <div id="ownerChips" class="owner-chips"></div>
+        <button type="button" class="btn-add-owner" id="addOwnerBtn">
+          + Aggiungi persona
+        </button>
+        <input type="hidden" id="fOwner">
+      </div>
+
+      <div class="field"><label>Componenti HW collegati</label>
+        <div id="hwChips" class="hw-chips"></div>
+        <button type="button" class="btn-add-hw" id="addHwBtn">
+          + Collega componente HW
+        </button>
+        <input type="hidden" id="fHw">
+      </div>
+
+      <div class="row2">
+        <div class="field"><label>Settimana</label>
+          <input type="date" id="fWeekM"></div>
+        <div class="field"><label>Scadenza</label><input type="date" id="fDue"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Stato</label>
+          <select id="fStatusM">
+            <option>Da fare</option><option>In corso</option><option>Fatto</option>
+            <option>Blocked</option><option>TBD</option>
+          </select></div>
+        <div class="field"><label>Progresso (%)</label>
+          <input type="number" id="fProg" min="0" max="100" value="0"></div>
+      </div>
+      <div class="field"><label>Note</label><textarea id="fNote"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-sec" id="btnCancel">Annulla</button>
+      <button class="btn btn-primary" id="btnSave">💾 Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL HW EDIT / NEW -->
+<div class="modal-bg" id="hwEditBg">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="hwEditTitle">Modifica componente</h2>
+      <p>I campi contrassegnati sono fissi; i parametri personalizzati puoi aggiungerli tu.</p>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="hwEditId">
+      <input type="hidden" id="hwEditMode">
+
+      <div class="row2">
+        <div class="field"><label>ID *</label>
+          <input type="text" id="hwE_id" placeholder="EM8" style="text-transform:uppercase"></div>
+        <div class="field"><label>Nome *</label>
+          <input type="text" id="hwE_name" placeholder="EM8_Heavy"></div>
+      </div>
+
+      <div class="row2">
+        <div class="field"><label>SN</label>
+          <input type="text" id="hwE_sn" placeholder="161742"></div>
+        <div class="field"><label>Modello</label>
+          <select id="hwE_modello">
+            <option value="">—</option>
+            <option value="BB">BB</option>
+            <option value="EM">EM</option>
+            <option value="EQM">EQM</option>
+            <option value="PFM">PFM</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field"><label>Categoria *</label>
+        <select id="hwE_categoria"></select>
+      </div>
+
+      <div class="section-title">Stato</div>
+
+      <div class="field">
+        <label>🔧 Montato</label>
+        <select id="hwE_montato">
+          <option>NO</option>
+          <option>YES</option>
+          <option>On going</option>
+        </select>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>🧴 Colla</label>
+          <div class="toggle-group" data-target="hwE_colla">
+            <button type="button" class="toggle-btn" data-val="NO">NO</button>
+            <button type="button" class="toggle-btn" data-val="YES">YES</button>
+          </div>
+          <input type="hidden" id="hwE_colla">
+        </div>
+        <div class="field">
+          <label>🔥 Heaters</label>
+          <div class="toggle-group" data-target="hwE_heaters">
+            <button type="button" class="toggle-btn" data-val="NO">NO</button>
+            <button type="button" class="toggle-btn" data-val="YES">YES</button>
+          </div>
+          <input type="hidden" id="hwE_heaters">
+        </div>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>🔌 Cablato</label>
+          <div class="toggle-group" data-target="hwE_cablato">
+            <button type="button" class="toggle-btn" data-val="NO">NO</button>
+            <button type="button" class="toggle-btn" data-val="YES">YES</button>
+          </div>
+          <input type="hidden" id="hwE_cablato">
+        </div>
+        <div class="field">
+          <label>⚙️ Funzionali</label>
+          <div class="toggle-group" data-target="hwE_funzionali">
+            <button type="button" class="toggle-btn" data-val="NO">NO</button>
+            <button type="button" class="toggle-btn" data-val="YES">YES</button>
+          </div>
+          <input type="hidden" id="hwE_funzionali">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>🏆 Qualifica</label>
+        <input type="text" id="hwE_qualifica" placeholder="Test conclusi / N/A / …">
+      </div>
+
+      <div class="section-title">Parametri personalizzati</div>
+      <div id="customParams"></div>
+      <button type="button" class="btn-add-custom" id="addCustomBtn">
+        + Aggiungi parametro personalizzato
+      </button>
+
+      <div class="field" style="margin-top:15px">
+        <label>Note</label>
+        <textarea id="hwE_notes" placeholder="Annotazioni libere…"></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-sec" id="hwEditCancel">Annulla</button>
+      <button class="btn btn-primary" id="hwEditSave">💾 Salva modifiche</button>
+    </div>
+  </div>
+</div>
+<!-- MODAL DOC NEW/EDIT -->
+<div class="modal-bg" id="docEditBg">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="docEditTitle">Nuovo documento</h2>
+      <p>Il titolo è obbligatorio.</p>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="docEditMode">
+      <input type="hidden" id="docEditId">
+      <div class="row2">
+        <div class="field"><label>ID *</label>
+          <input type="text" id="docE_id" placeholder="DOC-001"></div>
+        <div class="field"><label>Titolo *</label>
+          <input type="text" id="docE_nome" placeholder="Report finale AIT"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Tipo</label>
+          <select id="docE_tipo"></select>
+        </div>
+        <div class="field"><label>Responsabile</label>
+          <select id="docE_responsabile"></select>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Stato</label>
+          <select id="docE_stato">
+            <option>Da fare</option>
+            <option>In corso</option>
+            <option>Consegnato</option>
+            <option>Approvato</option>
+            <option>Bloccato</option>
+            <option>TBD</option>
+          </select>
+        </div>
+        <div class="field"><label>Scadenza</label>
+          <input type="date" id="docE_scadenza">
+        </div>
+      </div>
+      <div class="field"><label>Riferimento (HW/commessa)</label>
+        <input type="text" id="docE_riferimento" placeholder="Es. EM1, EQM_Light, WP3"></div>
+      <div class="field"><label>Note</label>
+        <textarea id="docE_note" placeholder="Dettagli, link, riferimenti…"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-sec" id="docEditCancel">Annulla</button>
+      <button class="btn btn-primary" id="docEditSave">💾 Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DOC DETAIL -->
+<div class="modal-bg" id="docModalBg">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="docModalTitle">Dettaglio documento</h2>
+      <p id="docModalSub"></p>
+    </div>
+    <div class="modal-body" id="docModalBody"></div>
+    <div class="modal-actions">
+      <button class="btn btn-sec" id="docDetailClose">Chiudi</button>
+      <button class="btn btn-primary" id="docModalEdit">✎ Modifica</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL HW DETAIL -->
+<div class="modal-bg" id="hwModalBg">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="hwModalTitle">Dettaglio</h2>
+      <p id="hwModalSub"></p>
+    </div>
+    <div class="modal-body" id="hwModalBody"></div>
+    <div class="modal-actions">
+      <button class="btn btn-sec" id="hwDetailClose">Chiudi</button>
+      <button class="btn btn-primary" id="hwModalAdd">➕ Attività collegata</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EXPORT -->
+<div class="modal-bg" id="exportBg">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>📤 Esporta CSV</h2>
+      <p>Scarica i file aggiornati e sostituiscili nella cartella di progetto.</p>
+    </div>
+    <div class="modal-body">
+      <div class="export-option" id="exportHwOpt">
+        <div class="info">
+          <b>🔧 hardware.csv</b>
+          <span id="exportHwInfo">— componenti</span>
+        </div>
+        <button class="btn-dl" onclick="event.stopPropagation();downloadHwCSV()">
+          ⬇️ Scarica
+        </button>
+      </div>
+      <div class="export-option" id="exportTaskOpt">
+        <div class="info">
+          <b>🗂️ attivita.csv</b>
+          <span id="exportTaskInfo">— attività</span>
+        </div>
+        <button class="btn-dl" onclick="event.stopPropagation();downloadTasksCSV()">
+          ⬇️ Scarica
+        </button>
+      </div>
+      <div class="export-option" id="exportDocOpt">
+        <div class="info">
+          <b>📄 documenti.csv</b>
+          <span id="exportDocInfo">— documenti</span>
+        </div>
+        <button class="btn-dl" onclick="event.stopPropagation();downloadDocsCSV()">
+          ⬇️ Scarica
+        </button>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin:14px 0 0;
+                padding:10px;background:var(--bg2);border-radius:8px;
+                line-height:1.55">
+        💡 Il formato del CSV ha colonne fisse + una colonna <b>custom</b>
+        che contiene i parametri personalizzati in JSON. Il vecchio formato
+        viene convertito automaticamente all'import.
+      </p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-sec"
+              onclick="document.getElementById('exportBg').classList.remove('open')">
+        Chiudi
+      </button>
+    </div>
+  </div>
+</div>
+<!-- MODAL RIEPILOGO -->
+<div class="modal-bg" id="summaryBg">
+  <div class="modal" style="max-width:960px">
+    <div class="modal-head">
+      <h2>📊 Riepilogo da inviare</h2>
+      <p>Copia il testo nell'email, oppure allega l'immagine generata.</p>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+        <button class="btn btn-primary" id="sumCopyText">📋 Copia testo</button>
+        <button class="btn btn-sec" id="sumDownloadSvg">⬇️ Scarica SVG</button>
+        <button class="btn btn-sec" id="sumDownloadPng">⬇️ Scarica PNG</button>
+        <button class="btn btn-sec" id="sumRefresh">🔄 Aggiorna</button>
+      </div>
+
+      <div style="font-size:11.5px;font-weight:700;color:var(--muted2);
+                  text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">
+        Anteprima vettoriale
+      </div>
+      <div id="sumPreview" style="background:var(--bg2);border:1px solid var(--line);
+           border-radius:10px;padding:14px;overflow:auto;max-height:420px;
+           display:flex;justify-content:center"></div>
+
+      <div style="font-size:11.5px;font-weight:700;color:var(--muted2);
+                  text-transform:uppercase;letter-spacing:.4px;margin:18px 0 6px">
+        Versione testo
+      </div>
+      <textarea id="sumText" readonly style="width:100%;min-height:220px;
+        font-family:Consolas,monospace;font-size:12px;padding:10px;
+        border:1.5px solid var(--line);border-radius:9px;
+        background:var(--bg2);color:var(--text);resize:vertical"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-sec"
+              onclick="document.getElementById('summaryBg').classList.remove('open')">
+        Chiudi
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- PICKER PERSONE / HW -->
+<div class="owner-picker" id="ownerPickerBg">
+  <div class="owner-picker-box">
+    <div class="owner-picker-head">
+      <h3 id="pickerTitle">👥 Seleziona persona</h3>
+    </div>
+    <div class="owner-picker-body" id="ownerPickerBody"></div>
+    <div class="owner-picker-foot">
+      <button class="btn btn-sec" id="ownerPickerClose">Chiudi</button>
+    </div>
+  </div>
+</div>
+
+<!-- BANNER RICONNESSIONE CARTELLA -->
+<div class="reconnect-banner" id="reconnectBanner">
+  <span class="msg">🔗 <b>Ultima cartella trovata</b> — clicca per ricollegarla
+    e salvare automaticamente sui CSV.</span>
+  <button id="reconnectBtn">🔓 Ricollega ora</button>
+  <button class="close-x" id="reconnectClose" title="Chiudi">✕</button>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="save-indicator" id="saveIndicator">
+  <span class="dot"></span><span id="saveIndicatorText">Salvato</span>
+</div>
+<input type="file" id="hiddenFileInput" accept=".csv,text/csv" multiple style="display:none">
+
+<script>
+/* ============================================================
+   COSTANTI
+   ============================================================ */
+const STORAGE_KEY = "ios_pnrr_data_v9";
+const THEME_KEY = "ios_pnrr_theme";
+const IDB_NAME = "ios_pnrr_fs";
+const IDB_STORE = "handles";
+const FOLDER_KEY = "projectFolder";
+let folderHandle = null;
+let savedFolderHandle = null;
+
+function idbOpen(){
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(IDB_NAME, 1);
+    req.onupgradeneeded = e => {
+      if(!e.target.result.objectStoreNames.contains(IDB_STORE)){
+        e.target.result.createObjectStore(IDB_STORE);
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function idbSet(key, val){
+  try{
+    const db = await idbOpen();
+    return new Promise((res, rej) => {
+      const tx = db.transaction(IDB_STORE, "readwrite");
+      tx.objectStore(IDB_STORE).put(val, key);
+      tx.oncomplete = () => res(true);
+      tx.onerror = () => rej(tx.error);
+    });
+  }catch(e){ return false; }
+}
+async function idbGet(key){
+  try{
+    const db = await idbOpen();
+    return new Promise((res, rej) => {
+      const tx = db.transaction(IDB_STORE, "readonly");
+      const r = tx.objectStore(IDB_STORE).get(key);
+      r.onsuccess = () => res(r.result || null);
+      r.onerror = () => rej(r.error);
+    });
+  }catch(e){ return null; }
+}
+async function idbDel(key){
+  try{
+    const db = await idbOpen();
+    return new Promise((res) => {
+      const tx = db.transaction(IDB_STORE, "readwrite");
+      tx.objectStore(IDB_STORE).delete(key);
+      tx.oncomplete = () => res(true);
+    });
+  }catch(e){ return false; }
+}
+async function verifyPermission(handle, withPrompt){
+  const opts = {mode: "readwrite"};
+  if((await handle.queryPermission(opts)) === "granted") return true;
+  if(withPrompt && (await handle.requestPermission(opts)) === "granted") return true;
+  return false;
+}
+
+const STATUS_CYCLE = ["Da fare","In corso","Fatto","Blocked","TBD"];
+const STATUS_ICON = {"Da fare":"🔴","In corso":"🟡","Fatto":"🟢","Blocked":"🟠","TBD":"⚪"};
+const DEFAULT_CATEGORIES = ["Heavy","Light","EQM","Board"];
+const CATEGORY_KNOWN_COLORS = {
+  Heavy:"#dc2626", Light:"#0ea5e9", EQM:"#8b5cf6", Board:"#7c3aed"
+};
+const DEFAULT_DOC_TIPI = ["Report","Analisi","Piano","Verbale","Procedura",
+                          "Test report","Manuale","Altro"];
+
+const HW_HEADERS = ["id","nome","sn","modello","categoria",
+                    "montato","colla","heaters","cablato",
+                    "funzionali","qualifica","custom","note"];
+const TASK_HEADERS = ["id","settimana","descrizione","owner","stato",
+                      "progresso","scadenza","hw","note"];
+const DOC_HEADERS  = ["id","nome","tipo","responsabile","stato",
+                      "scadenza","riferimento","note"];
+const DOC_STATES   = ["Da fare","In corso","Consegnato","Approvato","Bloccato","TBD"];
+const DOC_STATE_ICON = {
+  "Da fare":"🔴","In corso":"🟡","Consegnato":"🔵",
+  "Approvato":"🟢","Bloccato":"🟠","TBD":"⚪"
+};
+
+/* ============================================================
+   SEED
+   ============================================================ */
+const SEED_HW = [
+  {id:"EM1",nome:"EM1_Heavy (esempio)",sn:"161736",modello:"EM",categoria:"Heavy",
+   montato:"YES",colla:"NO",heaters:"YES",cablato:"NO",
+   funzionali:"NO",qualifica:"N/A",
+   custom:[{name:"Statore",value:"161736"},{name:"Rotore",value:"165316"},
+           {name:"Coppia avvio",value:"0.147"},{name:"Rigidezza",value:"TBD"}],
+   notes:"Componente di esempio. Modificalo o eliminalo dopo il primo import."}
+];
+
+const SEED_TASKS = [
+  {id:1,week:"01/01",desc:"Attività di esempio – modificala o eliminala",
+   owner:"Nome Cognome",status:"Da fare",prog:0,due:"",note:"Questa è un'attività di esempio.",
+   hw:["EM1"]}
+];
+
+const SEED_DOCS = [
+  {id:"DOC-001", nome:"Report finale AIT giunti EM",
+   tipo:"Report", responsabile:"Mario",
+   stato:"Da fare", scadenza:"2026-10-15",
+   riferimento:"EM1", note:"Documento di esempio"}
+];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let HW = [];
+let tasks = [];
+let docs = [];
+/* Liste globali condivise */
+let responsabili = [];   /* persone "registrate" manualmente, condivise con gli owner dei task */
+let docTipi = [];        /* tipologie documento aggiunte manualmente */
+
+let activeDocTipo = null;
+let activeStatus = null, activeHwCat = null, activeOwner = null;
+let sortBy = "due";      /* due | week | status | prog | desc | id */
+let sortDir = "asc";     /* asc | desc */
+let currentOwners = [];
+let currentHw = [];
+let unsavedChanges = 0;
+let lastSavedToCsv = null;
+
+/* ============================================================
+   STORAGE
+   ============================================================ */
+function saveToStorage(){
+  try{
+    localStorage.setItem(STORAGE_KEY,
+      JSON.stringify({HW, tasks, docs, responsabili, docTipi, ts: Date.now()}));
+  }catch(e){
+    console.error("Errore localStorage:", e);
+  }
+
+  if(folderHandle){
+    saveToFolder().then(res => {
+      if(res.ok){
+        lastSavedToCsv = Date.now();
+        unsavedChanges = 0;
+        showSaveIndicator("saved", "💾 Salvato su CSV");
+      } else {
+        unsavedChanges++;
+        const failed = Object.entries(res.results)
+          .filter(([k,v]) => v !== "ok")
+          .map(([k]) => k).join(", ");
+        console.warn("File non scritti:", res.results);
+        showSaveIndicator("warn", `⚠️ Errore su: ${failed}`);
+        toast(`⚠️ Non scrivo su: ${failed}. Controlla i permessi cartella.`, 4000);
+      }
+      updateDatasource();
+    });
+  } else {
+    unsavedChanges++;
+    showSaveIndicator("warn", "⚠️ Solo in cache — CSV non aggiornati");
+    updateDatasource();
+  }
+  return true;
+}
+
+function loadFromStorage(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return false;
+    const d = JSON.parse(raw);
+    if(Array.isArray(d.HW)) HW = d.HW;
+    if(Array.isArray(d.tasks)) tasks = d.tasks;
+    if(Array.isArray(d.docs)) docs = d.docs;
+    if(Array.isArray(d.responsabili)) responsabili = d.responsabili;
+    if(Array.isArray(d.docTipi)) docTipi = d.docTipi;
+    return HW.length > 0 || tasks.length > 0;
+  }catch(e){ return false; }
+}
+function clearStorage(){
+  try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+}
+
+/* ============================================================
+   UTILS
+   ============================================================ */
+function esc(s){
+  return String(s||"").replace(/[&<>"']/g,c=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+function initials(name){
+  if(!name) return "?";
+  const p = name.replace(/[\/&]/g," ").trim().split(/\s+/);
+  return (p[0][0] + (p[1]?p[1][0]:"")).toUpperCase();
+}
+function dateToIso(it){
+  if(!it) return "";
+  const parts = String(it).trim().split("/");
+  if(parts.length === 3){
+    const [d,m,y] = parts;
+    return `${y}-${m.padStart(2,"0")}-${d.padStart(2,"0")}`;
+  }
+  if(parts.length === 2){
+    const [d,m] = parts;
+    return `2026-${m.padStart(2,"0")}-${d.padStart(2,"0")}`;
+  }
+  return it;
+}
+function dateToIt(iso){
+  if(!iso) return "";
+  const parts = String(iso).split("-");
+  if(parts.length !== 3) return iso;
+  const [y,m,d] = parts;
+  return `${d}/${m}/${y}`;
+}
+const fmtDate = dateToIt;
+
+function dueClass(d){
+  if(!d) return "";
+  const t = new Date(); t.setHours(0,0,0,0);
+  const dd = new Date(d+"T00:00:00");
+  const diff = (dd-t)/86400000;
+  if(diff < 0) return "due-over";
+  if(diff <= 3) return "due-soon";
+  return "";
+}
+function weekSortKey(w){
+  if(!w) return "9999-99-99";
+  const s = String(w).trim();
+  let m1 = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if(m1){
+    return `${m1[1]}-${m1[2].padStart(2,"0")}-${m1[3].padStart(2,"0")}`;
+  }
+  let m2 = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})(?:[\/\-\.](\d{2,4}))?$/);
+  if(m2){
+    const d = parseInt(m2[1], 10);
+    const m = parseInt(m2[2], 10);
+    let y = m2[3] ? parseInt(m2[3], 10) : 2026;
+    if(y < 100) y += 2000;
+    return `${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+  }
+  return "9999-99-99";
+}
+function progressColor(p, st){
+  if(st==="Fatto"||p>=100) return "g";
+  if(st==="Blocked"||st==="TBD") return "r";
+  if(p>=50) return "y";
+  return "";
+}
+function flagClass(v){
+  if(!v) return "na";
+  const s = String(v).toUpperCase().trim();
+  if(s === "YES" || s.startsWith("YES") || s === "SI" || s === "SÌ") return "yes";
+  if(s === "NO") return "no";
+  if(s === "ONGOING" || s === "ON GOING" || s.includes("IN CORSO")) return "wip";
+  if(s === "-" || s === "N/A" || s === "") return "na";
+  if(s.includes("NOT OK")) return "warn";
+  if(s.includes("TBD")) return "na";
+  return "wip";
+}
+function categoryColor(c){
+  if(CATEGORY_KNOWN_COLORS[c]) return CATEGORY_KNOWN_COLORS[c];
+  const palette = ["#0891b2","#059669","#d97706","#be185d","#7c2d12",
+                   "#4338ca","#0f766e","#b45309","#9333ea","#0369a1"];
+  let hash = 0;
+  for(let i = 0; i < c.length; i++){
+    hash = (hash * 31 + c.charCodeAt(i)) >>> 0;
+  }
+  return palette[hash % palette.length];
+}
+function sortCategories(a,b){
+  const ia = DEFAULT_CATEGORIES.indexOf(a);
+  const ib = DEFAULT_CATEGORIES.indexOf(b);
+  if(ia >= 0 && ib >= 0) return ia - ib;
+  if(ia >= 0) return -1;
+  if(ib >= 0) return 1;
+  return a.localeCompare(b);
+}
+function splitOwners(raw){
+  if(!raw) return [];
+  return String(raw).split(/\s*[\/&,]\s*/).map(s=>s.trim()).filter(Boolean);
+}
+function joinOwners(arr){
+  return (arr || []).filter(Boolean).join(" / ");
+}
+
+/* ============================================================
+   PERSONE (condivise: owner dei task + responsabili documenti)
+   ============================================================ */
+function getAllKnownPeople(){
+  const people = new Set();
+  tasks.forEach(t => {
+    if(!t.owner) return;
+    splitOwners(t.owner).forEach(p => {
+      if(p && p.trim()) people.add(p.trim());
+    });
+  });
+  docs.forEach(d => {
+    if(!d.responsabile) return;
+    splitOwners(d.responsabile).forEach(p => {
+      if(p && p.trim()) people.add(p.trim());
+    });
+  });
+  responsabili.forEach(p => { if(p && p.trim()) people.add(p.trim()); });
+  return Array.from(people).sort((a,b)=>a.localeCompare(b));
+}
+
+/* ============================================================
+   TIPOLOGIE DOCUMENTO
+   ============================================================ */
+function getAllDocTipi(){
+  const set = new Set([...DEFAULT_DOC_TIPI, ...docTipi]);
+  docs.forEach(d => { if(d.tipo) set.add(d.tipo); });
+  return Array.from(set).sort((a,b)=>a.localeCompare(b));
+}
+
+function renamePersonGlobally(oldName, newName){
+  if(!oldName || !newName || oldName === newName) return 0;
+  let count = 0;
+  tasks.forEach(t => {
+    const owners = splitOwners(t.owner);
+    if(owners.includes(oldName)){
+      t.owner = joinOwners(owners.map(o => o === oldName ? newName : o));
+      count++;
+    }
+  });
+  docs.forEach(d => {
+    const owners = splitOwners(d.responsabile);
+    if(owners.includes(oldName)){
+      d.responsabile = joinOwners(owners.map(o => o === oldName ? newName : o));
+      count++;
+    }
+  });
+  responsabili = responsabili.map(p => p === oldName ? newName : p);
+  return count;
+}
+function deletePersonGlobally(name){
+  if(!name) return 0;
+  let count = 0;
+  tasks.forEach(t => {
+    const owners = splitOwners(t.owner);
+    if(owners.includes(name)){
+      t.owner = joinOwners(owners.filter(o => o !== name));
+      count++;
+    }
+  });
+  docs.forEach(d => {
+    const owners = splitOwners(d.responsabile);
+    if(owners.includes(name)){
+      d.responsabile = joinOwners(owners.filter(o => o !== name));
+      count++;
+    }
+  });
+  responsabili = responsabili.filter(p => p !== name);
+  return count;
+}
+function relatedTasks(hwId){
+  const explicit = tasks.filter(t => (t.hw||[]).includes(hwId));
+  if(explicit.length) return explicit;
+  const idUp = String(hwId).toUpperCase();
+  const nameShort = String(hwId).replace(/[^A-Z0-9]/g,"").toUpperCase();
+  return tasks.filter(t=>{
+    const blob = (t.desc+" "+(t.note||"")).toUpperCase();
+    return blob.includes(idUp) || blob.includes(nameShort);
+  });
+}
+
+/* ============================================================
+   CSV PARSING / BUILDING
+   ============================================================ */
+function splitCSVLine(line, delim){
+  const out = []; let cur = ''; let inQ = false;
+  for(let i=0; i<line.length; i++){
+    const c = line[i];
+    if(c === '"'){
+      if(inQ && line[i+1] === '"'){ cur += '"'; i++; }
+      else inQ = !inQ;
+    } else if(c === delim && !inQ){ out.push(cur); cur = ''; }
+    else cur += c;
+  }
+  out.push(cur);
+  return out;
+}
+function parseCSV(text){
+  text = text.replace(/^\uFEFF/, '');
+  const firstLine = (text.split(/\r?\n/)[0] || '');
+  const semi = (firstLine.match(/;/g)||[]).length;
+  const comma = (firstLine.match(/,/g)||[]).length;
+  const delim = semi >= comma ? ';' : ',';
+
+  const rows = [];
+  let cur = [];
+  let curField = '';
+  let inQ = false;
+  let i = 0;
+  while(i < text.length){
+    const c = text[i];
+    if(inQ){
+      if(c === '"'){
+        if(text[i+1] === '"'){ curField += '"'; i += 2; continue; }
+        inQ = false; i++; continue;
+      }
+      curField += c; i++; continue;
+    }
+    if(c === '"'){ inQ = true; i++; continue; }
+    if(c === delim){ cur.push(curField); curField = ''; i++; continue; }
+    if(c === '\r'){ i++; continue; }
+    if(c === '\n'){
+      cur.push(curField); curField = '';
+      rows.push(cur); cur = [];
+      i++; continue;
+    }
+    curField += c; i++;
+  }
+  if(curField !== '' || cur.length > 0){
+    cur.push(curField);
+    rows.push(cur);
+  }
+
+  const clean = rows.filter(r => {
+    if(!r || r.length === 0) return false;
+    const first = String(r[0]||'').trim();
+    if(first === '') return false;
+    if(first.startsWith('#')) return false;
+    return true;
+  });
+  if(clean.length === 0) return [];
+
+  const headers = clean[0].map(h => String(h||'').trim().toLowerCase());
+  const out = [];
+  for(let j = 1; j < clean.length; j++){
+    const obj = {};
+    headers.forEach((h,k) => obj[h] = String(clean[j][k] ?? '').trim());
+    out.push(obj);
+  }
+  return out;
+}
+function detectCsvType(text, filename){
+  const head = (text.split(/\r?\n/)[0] || "")
+    .replace(/^\uFEFF/, "").toLowerCase();
+  const n = (filename || "").toLowerCase();
+  let hwScore = 0, taskScore = 0, docScore = 0;
+  const hwKeywords = ["nome","categoria","modello","custom","sn",
+                      "montato","colla","heaters","cablato","qualifica",
+                      "classe","statore","rotore","coppia"];
+  const taskKeywords = ["settimana","descrizione","owner","stato",
+                        "progresso","scadenza","team"];
+  const docKeywords = ["tipo","responsabile","riferimento"];
+  hwKeywords.forEach(k => { if(head.includes(k)) hwScore += 3; });
+  taskKeywords.forEach(k => { if(head.includes(k)) taskScore += 3; });
+  docKeywords.forEach(k => { if(head.includes(k)) docScore += 3; });
+  if(n.includes("hardware") || n.includes("hw")) hwScore += 5;
+  if(n.includes("attivita") || n.includes("attività") ||
+     n.includes("task") || n.includes("attiv")) taskScore += 5;
+  if(n.includes("document") || n.includes("doc")) docScore += 5;
+  if(hwScore === 0 && taskScore === 0 && docScore === 0) return null;
+  if(hwScore >= taskScore && hwScore >= docScore) return "hw";
+  if(taskScore >= docScore) return "task";
+  return "doc";
+}
+function parseCustomField(raw){
+  if(!raw) return [];
+  try{
+    const arr = JSON.parse(raw);
+    if(Array.isArray(arr)){
+      return arr.filter(x => x && x.name)
+                .map(x => ({name:String(x.name), value:String(x.value||"")}));
+    }
+  }catch(e){
+    if(typeof raw === "string" && raw.includes("=")){
+      return raw.split("|").map(pair=>{
+        const [n,...rest] = pair.split("=");
+        return {name:(n||"").trim(), value:rest.join("=").trim()};
+      }).filter(x=>x.name);
+    }
+  }
+  return [];
+}
+function mapHwRow(r){
+  const isNew = r.categoria !== undefined || r.modello !== undefined;
+  if(isNew){
+    return {
+      id: r.id||'', nome: r.nome||r.name||'', sn: r.sn||'',
+      modello: r.modello||'', categoria: r.categoria||r.classe||'',
+      montato: r.montato||'', colla: r.colla||'', heaters: r.heaters||'',
+      cablato: r.cablato||'', funzionali: r.funzionali||'',
+      qualifica: r.qualifica||'', custom: parseCustomField(r.custom),
+      notes: r.note||r.notes||''
+    };
+  }
+  const id = r.id||'';
+  let modello = '';
+  if(id.toUpperCase().startsWith("EQM")) modello = "EQM";
+  else if(id.toUpperCase().startsWith("EM")) modello = "EM";
+  else if(id.toUpperCase().startsWith("SCU") || id.toUpperCase().startsWith("RCU")) modello = "PFM";
+  const custom = [];
+  const addC = (n,v) => { if(v && v !== "" && v !== "-") custom.push({name:n, value:String(v)}); };
+  addC("Statore", r.statore);
+  addC("Rotore", r.rotore);
+  addC("Coppia avvio", r.coppia);
+  addC("Coppia precedente", r.coppia_prec);
+  addC("Rigidezza", r.rigidezza);
+  addC("Freno", r.freno);
+  addC("Test motore", r.motor_test);
+  return {
+    id: id, nome: r.nome||r.name||'', sn: r.sn||'',
+    modello: modello, categoria: r.classe||r.class||'',
+    montato: r.montato||'', colla: r.colla||'', heaters: r.heaters||'',
+    cablato: r.cablato||'', funzionali: r.funzionali||'',
+    qualifica: r.qualifica||'', custom: custom,
+    notes: r.note||r.notes||''
+  };
+}
+function mapDocRow(r){
+  return {
+    id: r.id||'',
+    nome: r.nome||r.titolo||'',
+    tipo: r.tipo||'',
+    responsabile: r.responsabile||r.owner||'',
+    stato: r.stato||r.status||'Da fare',
+    scadenza: r.scadenza||r.due||'',
+    riferimento: r.riferimento||r.hw||'',
+    note: r.note||''
+  };
+}
+function docToRow(d){
+  return [d.id, d.nome, d.tipo, d.responsabile,
+          d.stato, d.scadenza, d.riferimento, d.note];
+}
+function mapTaskRow(r){
+  return {
+    id: parseInt(r.id) || Math.floor(Math.random()*1000000),
+    week: r.settimana||'',
+    desc: r.descrizione||r.desc||'', owner: r.owner||'',
+    status: r.stato||'Da fare', prog: parseInt(r.progresso)||0,
+    due: r.scadenza||'',
+    hw: (r.hw||"").split(",").map(s=>s.trim()).filter(Boolean),
+    note: r.note||''
+  };
+}
+function hwToRow(h){
+  const customJSON = (h.custom && h.custom.length)
+    ? JSON.stringify(h.custom.filter(c => c.name && String(c.name).trim() !== ""))
+    : "";
+  return [h.id, h.nome, h.sn, h.modello, h.categoria,
+          h.montato, h.colla, h.heaters, h.cablato,
+          h.funzionali, h.qualifica, customJSON, h.notes];
+}
+function taskToRow(t){
+  return [t.id,t.week,t.desc,t.owner,t.status,t.prog,t.due,
+          (t.hw||[]).join(","),
+          t.note];
+}
+function buildCSV(arr, headers, mapFn){
+  const lines = [headers.join(';')];
+  arr.forEach(item=>{
+    const vals = mapFn(item).map(v=>{
+      const s = String(v ?? '');
+      return (s.includes(';')||s.includes('\n')||s.includes('"')||s.includes('\r'))
+        ? '"' + s.replace(/"/g,'""') + '"' : s;
+    });
+    lines.push(vals.join(';'));
+  });
+  return lines.join('\r\n');
+}
+function downloadBlob(text, name){
+  const blob = new Blob(["\uFEFF" + text], {type:"text/csv;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+}
+function downloadHwCSV(){
+  const csv = buildCSV(HW, HW_HEADERS, hwToRow);
+  downloadBlob(csv, "hardware.csv");
+  toast("📦 hardware.csv scaricato");
+}
+function downloadTasksCSV(){
+  const csv = buildCSV(tasks, TASK_HEADERS, taskToRow);
+  downloadBlob(csv, "attivita.csv");
+  toast("📦 attivita.csv scaricato");
+}
+function downloadDocsCSV(){
+  const csv = buildCSV(docs, DOC_HEADERS, docToRow);
+  downloadBlob(csv, "documenti.csv");
+  toast("📦 documenti.csv scaricato");
+}
+function openExportModal(){
+  const infoHw   = document.getElementById("exportHwInfo");
+  const infoTask = document.getElementById("exportTaskInfo");
+  const infoDoc  = document.getElementById("exportDocInfo");
+  const d = new Date().toLocaleDateString("it-IT");
+  if(infoHw)   infoHw.textContent   = `${HW.length} componenti · ${d}`;
+  if(infoTask) infoTask.textContent = `${tasks.length} attività · ${d}`;
+  if(infoDoc)  infoDoc.textContent  = `${docs.length} documenti · ${d}`;
+  document.getElementById("exportBg").classList.add("open");
+}
+
+/* ============================================================
+   COLLEGAMENTO CARTELLA PROGETTO
+   ============================================================ */
+/* ============================================================
+   CAMBIO CARTELLA SICURO
+   - Salva prima la cartella attuale (se ci sono modifiche)
+   - Legge la nuova cartella PRIMA di toccare lo stato
+   - Se la nuova cartella è vuota, chiede cosa fare
+   - Non scrive mai dati vecchi nella cartella nuova senza consenso
+   ============================================================ */
+/* Salva l'handle attuale come "backup" in caso di annullamento del picker */
+const previousHandle = folderHandle;
+const previousName = folderHandle?.name;
+
+async function safeSwitchFolder(){
+  /* ─── 1. Se c'è una cartella collegata, salva prima ─── */
+  if(folderHandle && unsavedChanges > 0){
+    toast("💾 Salvataggio cartella attuale…");
+    const r = await saveToFolder();
+    if(!r.ok){
+      const failed = Object.entries(r.results)
+        .filter(([k,v]) => v !== "ok")
+        .map(([k]) => k).join(", ");
+      const proceed = confirm(
+        `⚠️ Non riesco a salvare su "${folderHandle.name}":\n${failed}\n\n` +
+        `Se procedi con il cambio cartella, le modifiche non salvate andranno PERSE.\n\n` +
+        `Vuoi procedere comunque?`
+      );
+      if(!proceed) return;
+    } else {
+      unsavedChanges = 0;
+      toast(`✅ "${folderHandle.name}" salvata`);
+    }
+  }
+
+  /* ─── 2. Apri il selettore ─── */
+  if(!('showDirectoryPicker' in window)){
+    alert("Browser non supportato. Usa Chrome o Edge.");
+    return;
+  }
+  let dir;
+  try{
+    dir = await window.showDirectoryPicker({mode: "readwrite"});
+  }catch(e){
+    if(e.name === "AbortError") return;   /* utente ha annullato */
+    console.error("safeSwitchFolder picker:", e);
+    toast("⚠️ Errore apertura picker");
+    return;
+  }
+
+  /* ─── 3. Leggi la NUOVA cartella PRIMA di toccare lo stato ─── */
+  const next = { hw: null, tasks: null, docs: null };
+  try{
+    try{
+      const f = await dir.getFileHandle("hardware.csv");
+      next.hw = parseCSV(await (await f.getFile()).text()).map(mapHwRow);
+    }catch(e){}
+    try{
+      const f = await dir.getFileHandle("attivita.csv");
+      next.tasks = parseCSV(await (await f.getFile()).text()).map(mapTaskRow);
+    }catch(e){}
+    try{
+      const f = await dir.getFileHandle("documenti.csv");
+      next.docs = parseCSV(await (await f.getFile()).text()).map(mapDocRow);
+    }catch(e){}
+  }catch(e){
+    console.error("safeSwitchFolder read:", e);
+    toast("⚠️ Errore lettura cartella");
+    return;
+  }
+
+  const hasHW   = next.hw    !== null;
+  const hasTask = next.tasks !== null;
+  const hasDoc  = next.docs  !== null;
+  const isEmpty = !hasHW && !hasTask && !hasDoc;
+
+  /* ─── 4a. Cartella VUOTA → chiedi all'utente ─── */
+  if(isEmpty){
+    const scelta = prompt(
+      `La cartella "${dir.name}" è vuota (nessun CSV trovato).\n\n` +
+      `Cosa vuoi fare?\n` +
+      `  1 = Copia i dati attuali del progetto nella nuova cartella\n` +
+      `  2 = Parti da zero (cartella e dati vuoti)\n` +
+      `  0 = Annulla (resta sulla cartella attuale)`
+    );
+    if(scelta === null || scelta.trim() === "0"){
+      toast("Annullato — nessun cambio cartella");
+      return;
+    }
+    if(scelta.trim() === "2"){
+      HW = []; tasks = []; docs = [];
+    }
+    /* se "1" → lascia i dati attuali: verranno scritti nella nuova cartella */
+
+    folderHandle = dir;
+    await idbSet(FOLDER_KEY, dir);
+    const r = await saveToFolder();
+    if(r.ok){
+      unsavedChanges = 0;
+      saveToStorage();
+      renderAll();
+      toast(`📁 "${dir.name}" collegata · ${HW.length} HW · ${tasks.length} attività · ${docs.length} documenti`);
+    } else {
+      toast(`⚠️ Errore scrittura su "${dir.name}"`, 4000);
+    }
+    return;
+  }
+
+  /* ─── 4b. Cartella con dati PARZIALI → avvisa ─── */
+  if(!hasHW || !hasTask){
+    const mancanti = [];
+    if(!hasHW)   mancanti.push("hardware.csv");
+    if(!hasTask) mancanti.push("attivita.csv");
+    if(!hasDoc)  mancanti.push("documenti.csv");
+    const proceed = confirm(
+      `La cartella "${dir.name}" contiene solo alcuni file.\n\n` +
+      `Presenti:\n` +
+      (hasHW   ? "  ✓ hardware.csv\n" : "") +
+      (hasTask ? "  ✓ attivita.csv\n" : "") +
+      (hasDoc  ? "  ✓ documenti.csv\n" : "") +
+      `\nMancanti (verranno creati con i dati attuali):\n` +
+      mancanti.map(m => "  ✗ " + m).join("\n") +
+      `\n\nProcedere con il cambio cartella?`
+    );
+    if(!proceed) return;
+  }
+
+  /* ─── 4c. Applica i dati nuovi (solo quelli presenti) ─── */
+  if(hasHW)   HW    = next.hw;
+  if(hasTask) tasks = next.tasks;
+  if(hasDoc)  docs  = next.docs;
+
+  folderHandle = dir;
+  await idbSet(FOLDER_KEY, dir);
+  /* Crea i file mancanti con i dati correnti (che sono quelli vecchi SOLO per i file assenti) */
+  const r = await saveToFolder();
+  if(r.ok){
+    unsavedChanges = 0;
+    saveToStorage();
+    renderAll();
+    toast(`📁 "${dir.name}" collegata · ${HW.length} HW · ${tasks.length} attività · ${docs.length} documenti`);
+  } else {
+    toast("⚠️ Cartella collegata ma errore scrittura", 4000);
+  }
+}
+
+async function linkFolder(interactive){
+  if(!('showDirectoryPicker' in window)){
+    if(interactive){
+      alert("Il browser non supporta la selezione di cartelle.\n\n" +
+            "Usa Chrome o Edge, oppure il pulsante 'Importa CSV'.");
+    }
+    return false;
+  }
+  try{
+    const dir = await window.showDirectoryPicker({mode: "readwrite"});
+    const files = [];
+    for await (const [name, handle] of dir.entries()){
+      if(handle.kind === "file") files.push(name.toLowerCase());
+    }
+    if(!files.includes("hardware.csv") || !files.includes("attivita.csv")){
+      if(interactive){
+        const ok = confirm(
+          "Nella cartella selezionata non ho trovato 'hardware.csv' e 'attivita.csv'.\n\n" +
+          "Vuoi collegarla comunque? Verranno creati automaticamente al primo salvataggio."
+        );
+        if(!ok) return false;
+      }
+    }
+    folderHandle = dir;
+    await idbSet(FOLDER_KEY, dir);
+    await loadFromFolder();
+    renderAll();
+    toast(`📁 Cartella "${dir.name}" collegata`);
+    return true;
+  }catch(e){
+    if(e.name === "AbortError") return false;
+    console.error("linkFolder error:", e);
+    return false;
+  }
+}
+
+async function loadFromFolder(){
+  if(!folderHandle) return false;
+  try{
+    const hwFile = await folderHandle.getFileHandle("hardware.csv");
+    const taskFile = await folderHandle.getFileHandle("attivita.csv");
+    const hwText = await (await hwFile.getFile()).text();
+    const taskText = await (await taskFile.getFile()).text();
+    HW = parseCSV(hwText).map(mapHwRow);
+    tasks = parseCSV(taskText).map(mapTaskRow);
+    try{
+      const docFile = await folderHandle.getFileHandle("documenti.csv");
+      const docText = await (await docFile.getFile()).text();
+      docs = parseCSV(docText).map(mapDocRow);
+    }catch(e){}
+    return true;
+  }catch(e){
+    try{
+      const files = [];
+      for await (const [name, handle] of folderHandle.entries()){
+        if(handle.kind === "file") files.push(name);
+      }
+      const hwName = files.find(n => /hw|hardware/i.test(n) && n.endsWith(".csv"));
+      const tkName = files.find(n => /attiv|task/i.test(n) && n.endsWith(".csv"));
+      if(!hwName || !tkName) return false;
+      const hwText = await (await (await folderHandle.getFileHandle(hwName)).getFile()).text();
+      const tkText = await (await (await folderHandle.getFileHandle(tkName)).getFile()).text();
+      HW = parseCSV(hwText).map(mapHwRow);
+      tasks = parseCSV(tkText).map(mapTaskRow);
+      return true;
+    }catch(e2){
+      return false;
+    }
+  }
+}
+
+async function saveToFolder(){
+  if(!folderHandle) return {ok:false, results:{_:"no folder"}};
+  const results = {};
+  async function writeFile(name, csv){
+    try{
+      const h = await folderHandle.getFileHandle(name, {create: true});
+      const w = await h.createWritable();
+      await w.write("\uFEFF" + csv);
+      await w.close();
+      results[name] = "ok";
+      return true;
+    }catch(e){
+      results[name] = e.message || String(e);
+      console.error(`❌ Errore scrittura ${name}:`, e);
+      return false;
+    }
+  }
+  await writeFile("hardware.csv",  buildCSV(HW,    HW_HEADERS,   hwToRow));
+  await writeFile("attivita.csv",  buildCSV(tasks, TASK_HEADERS, taskToRow));
+  await writeFile("documenti.csv", buildCSV(docs,  DOC_HEADERS,  docToRow));
+  const ok = Object.values(results).every(v => v === "ok");
+  return {ok, results};
+}
+
+async function tryRestoreFolder(){
+  if(!('showDirectoryPicker' in window)) return false;
+  const saved = await idbGet(FOLDER_KEY);
+  if(!saved) return false;
+  try{
+    const ok = await verifyPermission(saved, false);
+    if(!ok){
+      savedFolderHandle = saved;
+      return "need-click";
+    }
+    folderHandle = saved;
+    const loaded = await loadFromFolder();
+    return loaded;
+  }catch(e){
+    return false;
+  }
+}
+
+async function reconnectFolder(){
+  if(!savedFolderHandle){
+    await linkFolder(true);
+    hideReconnectBanner();
+    return;
+  }
+  try{
+    const granted = await savedFolderHandle.requestPermission({mode: "readwrite"});
+    if(granted === "granted"){
+      folderHandle = savedFolderHandle;
+      savedFolderHandle = null;
+      const loaded = await loadFromFolder();
+      if(loaded){
+        saveToStorage();
+        renderAll();
+        toast(`📁 Ricollegato a "${folderHandle.name}"`);
+      } else {
+        toast("⚠️ File CSV non trovati nella cartella");
+      }
+      hideReconnectBanner();
+    } else {
+      toast("⚠️ Permesso negato — usa '📁 Collega cartella' per riselezionare");
+    }
+  }catch(e){
+    console.warn("reconnectFolder error:", e);
+    toast("⚠️ Impossibile ricollegare — riseleziona la cartella");
+  }
+}
+
+function showReconnectBanner(){
+  const el = document.getElementById("reconnectBanner");
+  if(el) el.classList.add("show");
+}
+function hideReconnectBanner(){
+  const el = document.getElementById("reconnectBanner");
+  if(el) el.classList.remove("show");
+}
+
+async function importFiles(files){
+  const arr = Array.from(files);
+  const report = [];
+  for(const f of arr){
+    const text = await f.text();
+    const type = detectCsvType(text, f.name);
+    if(type === "hw"){
+      HW = parseCSV(text).map(mapHwRow);
+      report.push(`🔧 ${f.name} → hardware (${HW.length})`);
+    } else if(type === "task"){
+      tasks = parseCSV(text).map(mapTaskRow);
+      report.push(`🗂️ ${f.name} → attività (${tasks.length})`);
+    } else if(type === "doc"){
+      docs = parseCSV(text).map(mapDocRow);
+      report.push(`📄 ${f.name} → documenti (${docs.length})`);
+    } else {
+      report.push(`❓ ${f.name} → non riconosciuto`);
+    }
+  }
+  if(report.length) toast(report.join(" · "), 5000);
+  const ok = report.some(r =>
+    r.includes("→ hardware") || r.includes("→ attività") || r.includes("→ documenti"));
+  if(!ok){
+    alert("⚠️ File non riconosciuti.\n\n" + report.join("\n"));
+    return;
+  }
+  saveToStorage();
+  renderAll();
+}
+
+/* ============================================================
+   SAVE INDICATOR + TOAST
+   ============================================================ */
+let siTimer;
+function showSaveIndicator(state, text){
+  const el = document.getElementById("saveIndicator");
+  if(!el) return;
+  document.getElementById("saveIndicatorText").textContent = text;
+  el.className = "save-indicator show " + state;
+  clearTimeout(siTimer);
+  siTimer = setTimeout(()=>{ el.classList.remove("show"); }, 2000);
+}
+let toastTimer;
+function toast(msg, duration){
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove("show"), duration || 2200);
+}
+
+/* ============================================================
+   DATASOURCE UI
+   ============================================================ */
+function updateDatasource(){
+  const dot = document.getElementById("dsDot");
+  const txt = document.getElementById("dsText");
+  const chipSave = document.getElementById("chipSave");
+  const dropzone = document.getElementById("dropzone");
+  const btnFolder = document.getElementById("btnFolder");
+
+  const hasData = HW.length > 0 || tasks.length > 0 || docs.length > 0;
+  const stats = `<b>${HW.length} HW</b> · <b>${tasks.length} attività</b> · <b>${docs.length} documenti</b>`;
+
+  if(!hasData){
+    dot.className = "dot warn";
+    txt.innerHTML = "Nessun dato caricato";
+    chipSave.className = "ds-chip warn";
+    chipSave.textContent = "📥 Collega cartella o importa CSV";
+    dropzone.style.display = "block";
+  } else if(folderHandle){
+    dot.className = "dot ok";
+    txt.innerHTML = stats;
+    if(unsavedChanges > 0){
+      chipSave.className = "ds-chip warn";
+      chipSave.textContent = `⏳ ${unsavedChanges} modifiche in salvataggio…`;
+    } else {
+      chipSave.className = "ds-chip";
+      chipSave.textContent = `📁 ${folderHandle.name} · CSV aggiornati`;
+    }
+    dropzone.style.display = "none";
+  } else {
+    dot.className = "dot warn";
+    txt.innerHTML = stats;
+    chipSave.className = "ds-chip warn";
+    if(unsavedChanges > 0){
+      chipSave.textContent = `⚠️ ${unsavedChanges} modifiche solo in cache — CSV non aggiornati`;
+    } else {
+      chipSave.textContent = "⚠️ Cartella non collegata";
+    }
+    dropzone.style.display = "none";
+  }
+
+  if(btnFolder){
+    btnFolder.textContent = folderHandle
+      ? `📁 ${folderHandle.name}`
+      : "📁 Collega cartella";
+    if(!folderHandle && unsavedChanges > 0){
+      btnFolder.classList.add("primary");
+    } else {
+      btnFolder.classList.remove("primary");
+    }
+  }
+
+  if(folderHandle){
+    const b = document.getElementById("reconnectBanner");
+    if(b) b.classList.remove("show");
+  }
+}
+
+/* ============================================================
+   FILTRO PER PERSONA (owner)
+   ============================================================ */
+function updateOwnerFilterUI(){
+  const clearBtn = document.getElementById("clearOwnerFilter");
+  if(clearBtn){
+    clearBtn.style.display = activeOwner ? "inline-flex" : "none";
+  }
+}
+function renderOwnerFilterChips(){
+  const container = document.getElementById("ownerFilterChips");
+  if(!container) return;
+  const counts = {};
+  tasks.forEach(t => {
+    splitOwners(t.owner).forEach(p => {
+      const name = p.trim();
+      if(name) counts[name] = (counts[name]||0) + 1;
+    });
+  });
+  const names = Object.keys(counts).sort((a,b)=>a.localeCompare(b));
+  if(names.length === 0){
+    container.innerHTML = `<span style="font-size:12px;color:var(--muted2);font-style:italic">Nessuna persona nelle attività</span>`;
+    return;
+  }
+  container.innerHTML = names.map(n => {
+    const active = activeOwner === n ? "active" : "";
+    return `<span class="chip ${active}" data-owner="${esc(n)}" title="${counts[n]} attività">
+      <span style="width:16px;height:16px;font-size:8.5px;
+        background:${active?'rgba(255,255,255,.25)':'var(--accent-bg)'};
+        color:${active?'#fff':'var(--accent)'};border-radius:50%;
+        display:inline-flex;align-items:center;justify-content:center;
+        font-weight:800;margin-right:2px">${initials(n)}</span>
+      ${esc(n)} <span style="opacity:.65;font-weight:700">${counts[n]}</span>
+    </span>`;
+  }).join("");
+  container.querySelectorAll(".chip[data-owner]").forEach(c => {
+    c.addEventListener("click", () => {
+      const v = c.dataset.owner;
+      if(activeOwner === v){
+        activeOwner = null;
+        c.classList.remove("active");
+      } else {
+        activeOwner = v;
+        container.querySelectorAll(".chip[data-owner]").forEach(x =>
+          x.classList.remove("active"));
+        c.classList.add("active");
+      }
+      updateOwnerFilterUI();
+      renderTasks();
+    });
+  });
+  updateOwnerFilterUI();
+}
+
+function getFilteredTasks(){
+  const q = (document.getElementById("search")?.value||"").trim().toLowerCase();
+  return tasks.filter(t=>{
+    if(activeStatus && t.status !== activeStatus) return false;
+    if(activeOwner){
+      const owners = splitOwners(t.owner);
+      if(!owners.includes(activeOwner)) return false;
+    }
+    if(q){
+      const blob = (t.desc+" "+t.owner+" "+(t.note||"")).toLowerCase();
+      if(!blob.includes(q)) return false;
+    }
+    return true;
+  });
+}
+function getFilteredHW(){
+  return HW.filter(h => !activeHwCat || h.categoria === activeHwCat);
+}
+
+/* ============================================================
+   RENDER TASK CARD
+   ============================================================ */
+function compareTasks(a, b){
+  let va, vb;
+  switch(sortBy){
+    case "due":
+      va = a.due || "9999-99-99";
+      vb = b.due || "9999-99-99";
+      break;
+    case "week":
+      va = weekSortKey(a.week || "");
+      vb = weekSortKey(b.week || "");
+      break;
+    case "status":
+      va = STATUS_CYCLE.indexOf(a.status);
+      vb = STATUS_CYCLE.indexOf(b.status);
+      break;
+    case "prog":
+      va = a.prog || 0;
+      vb = b.prog || 0;
+      break;
+    case "desc":
+      va = (a.desc || "").toLowerCase();
+      vb = (b.desc || "").toLowerCase();
+      break;
+    case "id":
+      va = a.id || 0;
+      vb = b.id || 0;
+      break;
+    default:
+      return 0;
+  }
+  if(va < vb) return sortDir === "asc" ? -1 : 1;
+  if(va > vb) return sortDir === "asc" ? 1 : -1;
+  /* Tiebreak stabile: id crescente */
+  return (a.id || 0) - (b.id || 0);
+}
+
+function cardHTML(t){
+  const done = t.status === "Fatto" ? "done" : "";
+  const pc = progressColor(t.prog, t.status);
+  const dc = dueClass(t.due);
+  const ownerList = splitOwners(t.owner);
+  const ownerHtml = ownerList.length
+    ? ownerList.map(o => `<div class="meta-item"><span class="avatar">${initials(o)}</span><b>${esc(o)}</b></div>`).join("")
+    : `<div class="meta-item" style="opacity:.5">👤 —</div>`;
+  return `
+    <div class="card ${done}">
+      <div class="card-top">
+        <span style="font-size:11.5px;color:var(--muted);font-weight:600">
+          🗓️ ${esc((t.week||"—").replace(/\/20\d{2}$/,""))}
+        </span>
+        <div class="card-menu">
+          <button class="icon-btn" onclick="editTask(${t.id})" title="Modifica">✎</button>
+          <button class="icon-btn del" onclick="delTask(${t.id})" title="Elimina">✕</button>
+        </div>
+      </div>
+      <div class="desc">${esc(t.desc)}</div>
+      ${(t.hw && t.hw.length) ? `
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:-2px">
+          ${t.hw.map(id => `<span class="hw-badge" onclick="event.stopPropagation();goToHw('${esc(id)}')" title="Vai al componente">🔧 ${esc(id)}</span>`).join("")}
+        </div>
+      ` : ""}
+      ${t.note ? `<div class="note">${esc(t.note)}</div>` : ""}
+      <div class="meta">
+        ${ownerHtml}
+        ${t.due ? `<div class="meta-item ${dc}">📅 <b>${fmtDate(t.due)}</b></div>` : ""}
+      </div>
+      <div class="progress-row">
+        <span class="status-pill" data-st="${t.status}" onclick="cycleStatus(${t.id})" title="Clicca per cambiare">
+          ${STATUS_ICON[t.status]||"⚪"} ${esc(t.status)}
+        </span>
+        <div class="bar"><div class="fill ${pc}" style="width:${t.prog||0}%"></div></div>
+        <span class="pct">${t.prog||0}%</span>
+      </div>
+    </div>`;
+}
+function renderTasks(){
+  const content = document.getElementById("content");
+  const tabCount = document.getElementById("tabCountTasks");
+  if(tabCount) tabCount.textContent = tasks.length;
+  if(!content) return;
+  const arr = getFilteredTasks();
+  if(arr.length === 0){
+    content.innerHTML = `<div class="empty"><div class="ico">🔎</div>
+      <h3>Nessuna attività trovata</h3></div>`;
+    return;
+  }
+
+  const sortedArr = arr.slice().sort(compareTasks);
+
+  if(currentView === "week"){
+    const groups = {};
+    sortedArr.forEach(t => {
+      const k = t.week || "Senza settimana";
+      (groups[k] = groups[k] || []).push(t);
+    });
+    let weeks = Object.keys(groups).sort((a,b)=>
+      weekSortKey(a).localeCompare(weekSortKey(b))
+    );
+    /* Se stai ordinando per settimana, applica anche ai gruppi */
+    if(sortBy === "week" && sortDir === "desc") weeks = weeks.reverse();
+
+    content.innerHTML = weeks.map(w=>{
+      const list = groups[w];              /* già ordinata da sortedArr */
+      const done = list.filter(t=>t.status==="Fatto").length;
+      const pct = list.length ? Math.round(done/list.length*100) : 0;
+      return `<section class="week-section">
+        <div class="week-head">
+          <div class="week-title">🗓️ ${esc(w.replace(/\/20\d{2}$/,""))}
+            <span class="badge-count">${list.length} attività</span></div>
+          <div class="week-prog">
+            <div class="bar"><div class="fill" style="width:${pct}%"></div></div>
+            <span class="pct">${pct}%</span>
+          </div>
+        </div>
+        <div class="cards">${list.map(cardHTML).join("")}</div>
+      </section>`;
+    }).join("");
+  } else {
+    const cols = ["Da fare","In corso","Fatto","Blocked","TBD"];
+    content.innerHTML = `<div class="kanban">${cols.map(st=>{
+      const list = sortedArr.filter(t => t.status === st);
+      return `<div class="kanban-col" data-st="${st}">
+        <div class="kanban-head"><span>${STATUS_ICON[st]} ${st}</span>
+          <span class="count">${list.length}</span></div>
+        ${list.length ? list.map(cardHTML).join("") :
+          `<div class="kanban-empty">Nessuna attività</div>`}
+      </div>`;
+    }).join("")}</div>`;
+  }
+}
+
+/* ============================================================
+   RENDER HW CARD
+   ============================================================ */
+function hwCardHTML(h){
+  const rel = relatedTasks(h.id);
+  const color = categoryColor(h.categoria);
+  const modello = h.modello ? `<span class="modello-badge">${esc(h.modello)}</span>` : "";
+  const customFlags = (h.custom||[]).filter(c => c.name && c.value)
+    .map(c => `<span class="flag custom"><b>${esc(c.name)}:</b> ${esc(c.value)}</span>`)
+    .join("");
+  const fixedFlags = `
+    <span class="flag ${flagClass(h.colla)}">🧴 Colla: ${esc(h.colla||"—")}</span>
+    <span class="flag ${flagClass(h.heaters)}">🔥 Heater: ${esc(h.heaters||"—")}</span>
+    <span class="flag ${flagClass(h.cablato)}">🔌 Cablato: ${esc(h.cablato||"—")}</span>
+    <span class="flag ${flagClass(h.funzionali)}">⚙️ Funzionali: ${esc(h.funzionali||"—")}</span>
+    <span class="flag ${flagClass(h.qualifica)}">🏆 ${esc(h.qualifica||"—")}</span>
+  `;
+  return `
+    <div class="hw-card" style="border-top-color:${color}">
+      <div class="hw-head">
+        <div>
+          <div class="hw-name">
+            <span class="type-tag" style="background:${color}22;color:${color}">${esc(h.categoria)}</span>
+            ${esc(h.nome)}
+          </div>
+          <div class="hw-sub">
+            <span class="hw-sn"><code>SN ${esc(h.sn||"—")}</code></span>
+            ${modello}
+          </div>
+        </div>
+        <div class="card-menu">
+          <button class="icon-btn" onclick="openHwEdit('${esc(h.id)}')" title="Modifica">✎</button>
+          <button class="icon-btn del" onclick="deleteHw('${esc(h.id)}')" title="Elimina">✕</button>
+        </div>
+      </div>
+      <div class="hw-field"><span class="k">Montato</span>
+        <span class="v">${esc(h.montato||"—")}</span></div>
+      <div class="hw-flags">${fixedFlags}${customFlags}</div>
+      ${h.notes ? `<div class="note">${esc(h.notes)}</div>` : ""}
+      ${rel.length ? `<div style="font-size:11.5px;color:var(--muted)">📌 <b style="color:var(--text)">${rel.length}</b> attività collegate</div>` : ""}
+      <div style="display:flex;gap:6px;margin-top:auto;padding-top:6px;border-top:1px dashed var(--line)">
+        <button class="btn btn-sec" style="flex:1;justify-content:center;font-size:11.5px;padding:6px" onclick="showHwDetail('${esc(h.id)}')">📋 Dettaglio</button>
+        <button class="btn btn-primary" style="flex:1;justify-content:center;font-size:11.5px;padding:6px" onclick="openHwEdit('${esc(h.id)}')">✎ Modifica</button>
+      </div>
+    </div>`;
+}
+function renderHwFilterChips(){
+  const container = document.getElementById("hwFilterChips");
+  if(!container) return;
+  const cats = new Set();
+  HW.forEach(h => { if(h.categoria) cats.add(h.categoria); });
+  const sorted = Array.from(cats).sort(sortCategories);
+  container.innerHTML = sorted.map(c => {
+    const color = categoryColor(c);
+    const active = activeHwCat === c ? "active" : "";
+    return `<span class="chip ${active}" data-cat="${esc(c)}">
+      <span class="dot" style="background:${color}"></span>${esc(c)}
+    </span>`;
+  }).join("");
+  container.querySelectorAll(".chip[data-cat]").forEach(c => {
+    c.addEventListener("click", () => {
+      const v = c.dataset.cat;
+      if(activeHwCat === v){ activeHwCat = null; c.classList.remove("active"); }
+      else {
+        activeHwCat = v;
+        container.querySelectorAll(".chip").forEach(x => x.classList.remove("active"));
+        c.classList.add("active");
+      }
+      renderHW();
+    });
+  });
+}
+function renderHW(){
+  const content = document.getElementById("hwContent");
+  const tabCount = document.getElementById("tabCountHw");
+  if(tabCount) tabCount.textContent = HW.length;
+  if(!content) return;
+  renderHwFilterChips();
+  const arr = getFilteredHW();
+  if(arr.length === 0){
+    content.innerHTML = `<div class="empty"><div class="ico">🔧</div>
+      <h3>Nessun componente con questo filtro</h3></div>`;
+    return;
+  }
+  const byCat = {};
+  arr.forEach(h => {
+    const k = h.categoria || "Senza categoria";
+    (byCat[k] = byCat[k] || []).push(h);
+  });
+  const cats = Object.keys(byCat).sort(sortCategories);
+  content.innerHTML = cats.map(k => {
+    const color = categoryColor(k);
+    return `<section class="hw-section">
+      <div class="hw-section-head">
+        <h2>
+          <span style="display:inline-block;width:10px;height:10px;
+            border-radius:50%;background:${color};margin-right:4px"></span>
+          🏷️ ${esc(k)}
+        </h2>
+        <span class="badge-count">${byCat[k].length}</span>
+      </div>
+      <div class="hw-grid">${byCat[k].map(hwCardHTML).join("")}</div>
+    </section>`;
+  }).join("");
+}
+
+/* ============================================================
+   RENDER DOCUMENTI
+   ============================================================ */
+function getFilteredDocs(){
+  return docs.filter(d => !activeDocTipo || d.tipo === activeDocTipo);
+}
+function docCardHTML(d){
+  const tipo = d.tipo || "Senza tipo";
+  const dc = dueClass(d.scadenza);
+  const rel = d.riferimento
+    ? `<div style="font-size:11.5px;color:var(--muted)">🔗 <b>${esc(d.riferimento)}</b></div>`
+    : "";
+  return `
+    <div class="hw-card" style="border-top-color:#0891b2">
+      <div class="hw-head">
+        <div>
+          <div class="hw-name">
+            <span class="type-tag" style="background:#0891b222;color:#0891b2">${esc(tipo)}</span>
+            ${esc(d.nome || d.id)}
+          </div>
+          <div class="hw-sub">
+            <span class="hw-sn"><code>${esc(d.id)}</code></span>
+            ${d.responsabile ? `<span>👤 <b>${esc(d.responsabile)}</b></span>` : ""}
+          </div>
+        </div>
+        <div class="card-menu">
+          <button class="icon-btn" onclick="openDocEdit('${esc(d.id)}')" title="Modifica">✎</button>
+          <button class="icon-btn del" onclick="deleteDoc('${esc(d.id)}')" title="Elimina">✕</button>
+        </div>
+      </div>
+      ${d.scadenza ? `<div class="hw-field ${dc}"><span class="k">Scadenza</span>
+        <span class="v">${fmtDate(d.scadenza)}</span></div>` : ""}
+      <div class="hw-flags">
+        <span class="flag ${flagDocState(d.stato)}">${DOC_STATE_ICON[d.stato]||"⚪"} ${esc(d.stato)}</span>
+      </div>
+      ${rel}
+      ${d.note ? `<div class="note">${esc(d.note)}</div>` : ""}
+      <div style="display:flex;gap:6px;margin-top:auto;padding-top:6px;border-top:1px dashed var(--line)">
+        <button class="btn btn-sec" style="flex:1;justify-content:center;font-size:11.5px;padding:6px" onclick="showDocDetail('${esc(d.id)}')">📋 Dettaglio</button>
+        <button class="btn btn-primary" style="flex:1;justify-content:center;font-size:11.5px;padding:6px" onclick="openDocEdit('${esc(d.id)}')">✎ Modifica</button>
+      </div>
+    </div>`;
+}
+function flagDocState(st){
+  if(st === "Approvato") return "yes";
+  if(st === "Consegnato") return "wip";
+  if(st === "Bloccato") return "warn";
+  if(st === "Da fare") return "no";
+  return "na";
+}
+function renderDocFilterChips(){
+  const container = document.getElementById("docFilterChips");
+  if(!container) return;
+  const tipi = new Set();
+  docs.forEach(d => { if(d.tipo) tipi.add(d.tipo); });
+  const sorted = Array.from(tipi).sort();
+  container.innerHTML = sorted.map(t => {
+    const active = activeDocTipo === t ? "active" : "";
+    return `<span class="chip ${active}" data-doctipo="${esc(t)}">
+      <span class="dot" style="background:#0891b2"></span>${esc(t)}
+    </span>`;
+  }).join("");
+  container.querySelectorAll(".chip[data-doctipo]").forEach(c => {
+    c.addEventListener("click", () => {
+      const v = c.dataset.doctipo;
+      if(activeDocTipo === v){ activeDocTipo = null; c.classList.remove("active"); }
+      else {
+        activeDocTipo = v;
+        container.querySelectorAll(".chip").forEach(x => x.classList.remove("active"));
+        c.classList.add("active");
+      }
+      renderDocs();
+    });
+  });
+}
+function renderDocs(){
+  const content = document.getElementById("docContent");
+  const tabCount = document.getElementById("tabCountDocs");
+  if(tabCount) tabCount.textContent = docs.length;
+  if(!content) return;
+  renderDocFilterChips();
+
+  const arr = getFilteredDocs();
+  if(arr.length === 0){
+    content.innerHTML = `<div class="empty"><div class="ico">📄</div>
+      <h3>Nessun documento</h3>
+      <p>Clicca "➕ Nuovo documento" per iniziare.</p></div>`;
+    return;
+  }
+  const byTipo = {};
+  arr.forEach(d => {
+    const k = d.tipo || "Senza tipo";
+    (byTipo[k] = byTipo[k] || []).push(d);
+  });
+  const tipi = Object.keys(byTipo).sort();
+  content.innerHTML = tipi.map(k => {
+    const list = byTipo[k].slice().sort((a,b)=>{
+      const da = a.scadenza || "9999-99-99";
+      const db = b.scadenza || "9999-99-99";
+      return da.localeCompare(db);
+    });
+    return `<section class="hw-section">
+      <div class="hw-section-head">
+        <h2><span style="display:inline-block;width:10px;height:10px;
+          border-radius:50%;background:#0891b2;margin-right:4px"></span>
+          🏷️ ${esc(k)}</h2>
+        <span class="badge-count">${list.length}</span>
+      </div>
+      <div class="hw-grid">${list.map(docCardHTML).join("")}</div>
+    </section>`;
+  }).join("");
+}
+
+/* ============================================================
+   DOC EDIT / NEW
+   ============================================================ */
+/* Helper: popola una <select> con valori + opzione "aggiungi nuovo" */
+function populateSelectWithNew(selectEl, values, currentValue, newLabel){
+  if(!selectEl) return;
+  const set = new Set(values);
+  const sorted = Array.from(set).sort((a,b)=>a.localeCompare(b));
+  selectEl.innerHTML = sorted.map(v =>
+    `<option value="${esc(v)}">${esc(v)}</option>`
+  ).join("") + `<option value="__NEW__">${newLabel}</option>`;
+
+  if(currentValue){
+    selectEl.value = currentValue;
+    /* se il valore non è tra le opzioni, aggiungilo come temporaneo */
+    if(selectEl.value !== currentValue){
+      const opt = document.createElement("option");
+      opt.value = currentValue; opt.textContent = currentValue; opt.selected = true;
+      selectEl.insertBefore(opt, selectEl.lastChild);
+    }
+  } else if(selectEl.options.length){
+    selectEl.selectedIndex = 0;
+  }
+}
+
+function populateDocTipoSelect(currentValue){
+  populateSelectWithNew(
+    document.getElementById("docE_tipo"),
+    getAllDocTipi(),
+    currentValue,
+    "➕ Nuovo tipo…"
+  );
+}
+function populateDocResponsabileSelect(currentValue){
+  populateSelectWithNew(
+    document.getElementById("docE_responsabile"),
+    getAllKnownPeople(),
+    currentValue,
+    "➕ Nuovo responsabile…"
+  );
+}
+
+function openDocNew(){
+  document.getElementById("docEditMode").value = "new";
+  document.getElementById("docEditId").value = "";
+  document.getElementById("docEditTitle").textContent = "Nuovo documento";
+  const set = (id,v)=>{ const el=document.getElementById(id); if(el) el.value = v ?? ""; };
+  set("docE_id", "DOC-" + String(docs.length+1).padStart(3,"0"));
+  set("docE_nome", "");
+  set("docE_stato", "Da fare");
+  set("docE_scadenza", "");
+  set("docE_riferimento", "");
+  set("docE_note", "");
+  populateDocTipoSelect("Report");
+  populateDocResponsabileSelect("");
+  document.getElementById("docEditBg").classList.add("open");
+  setTimeout(()=>document.getElementById("docE_nome").focus(), 100);
+}
+function openDocEdit(id){
+  const d = docs.find(x=>x.id===id);
+  if(!d) return;
+  document.getElementById("docEditMode").value = "edit";
+  document.getElementById("docEditId").value = d.id;
+  document.getElementById("docEditTitle").textContent = "Modifica " + (d.nome||d.id);
+  const set = (elId,v)=>{ const el=document.getElementById(elId); if(el) el.value = v ?? ""; };
+  set("docE_id", d.id);
+  set("docE_nome", d.nome);
+  set("docE_stato", d.stato);
+  set("docE_scadenza", d.scadenza);
+  set("docE_riferimento", d.riferimento);
+  set("docE_note", d.note);
+  populateDocTipoSelect(d.tipo);
+  populateDocResponsabileSelect(d.responsabile);
+  document.getElementById("docEditBg").classList.add("open");
+}
+function closeDocEdit(){
+  document.getElementById("docEditBg").classList.remove("open");
+}
+function saveDocEdit(){
+  const mode = document.getElementById("docEditMode").value;
+  const oldId = document.getElementById("docEditId").value;
+  const id = document.getElementById("docE_id").value.trim();
+  const nome = document.getElementById("docE_nome").value.trim();
+  if(!id){ alert("L'ID è obbligatorio"); return; }
+  if(!nome){ alert("Il titolo è obbligatorio"); return; }
+  const g = elId => document.getElementById(elId).value;
+  const tipo = g("docE_tipo");
+  const responsabile = g("docE_responsabile");
+
+  /* Se il tipo è nuovo (non era nell'elenco), salvalo nella lista globale */
+  if(tipo && tipo !== "__NEW__" && !docTipi.includes(tipo) && !DEFAULT_DOC_TIPI.includes(tipo)){
+    docTipi.push(tipo);
+  }
+  /* Se il responsabile è nuovo, salvalo nella lista globale */
+  if(responsabile && responsabile !== "__NEW__" && !responsabili.includes(responsabile)){
+    responsabili.push(responsabile);
+  }
+
+  const obj = {
+    id, nome,
+    tipo: tipo === "__NEW__" ? "" : tipo,
+    responsabile: responsabile === "__NEW__" ? "" : responsabile,
+    stato: g("docE_stato"),
+    scadenza: g("docE_scadenza"),
+    riferimento: g("docE_riferimento"),
+    note: g("docE_note")
+  };
+  if(mode === "new"){
+    if(docs.find(x => x.id === id)){ alert(`Esiste già un documento con ID "${id}"`); return; }
+    docs.push(obj);
+  } else {
+    const d = docs.find(x => x.id === (oldId || id));
+    if(!d){ alert("Impossibile trovare il documento da modificare"); return; }
+    if(id !== d.id && docs.find(x => x.id === id)){
+      alert(`Esiste già un documento con ID "${id}"`);
+      return;
+    }
+    Object.assign(d, obj);
+  }
+  closeDocEdit();
+  saveToStorage();
+  renderAll();
+  toast(mode === "new" ? `➕ ${id} creato` : "💾 Modifiche salvate");
+}
+function deleteDoc(id){
+  const d = docs.find(x=>x.id===id);
+  if(!d) return;
+  if(!confirm(`Eliminare "${d.nome}" (${d.id})?`)) return;
+  docs = docs.filter(x => x.id !== id);
+  saveToStorage();
+  renderAll();
+  toast(`🗑️ ${id} eliminato`);
+}
+function showDocDetail(id){
+  const d = docs.find(x=>x.id===id);
+  if(!d) return;
+  document.getElementById("docModalTitle").textContent = d.nome || d.id;
+  document.getElementById("docModalSub").textContent =
+    `${d.tipo || "—"} · ${d.id}`;
+  let body = `<div class="hw-flags" style="margin-bottom:14px">
+    <span class="flag ${flagDocState(d.stato)}">${DOC_STATE_ICON[d.stato]||"⚪"} ${esc(d.stato)}</span>
+    ${d.responsabile ? `<span class="flag na">👤 ${esc(d.responsabile)}</span>`:""}
+    ${d.scadenza ? `<span class="flag na">📅 ${fmtDate(d.scadenza)}</span>`:""}
+    ${d.riferimento ? `<span class="flag na">🔗 ${esc(d.riferimento)}</span>`:""}
+  </div>`;
+  if(d.note){
+    body += `<div class="field"><label>Note</label>
+      <div style="padding:10px;background:var(--bg2);border-radius:8px;font-size:13px">${esc(d.note)}</div></div>`;
+  }
+  document.getElementById("docModalBody").innerHTML = body;
+  document.getElementById("docModalEdit").onclick = ()=>{ closeDocModal(); openDocEdit(d.id); };
+  document.getElementById("docModalBg").classList.add("open");
+}
+function closeDocModal(){
+  document.getElementById("docModalBg").classList.remove("open");
+}
+
+/* ============================================================
+   CUSTOM PARAMS
+   ============================================================ */
+function addCustomRow(name, value){
+  const container = document.getElementById("customParams");
+  const row = document.createElement("div");
+  row.className = "custom-row";
+  row.innerHTML = `
+    <input type="text" class="c-name" placeholder="Nome (es. Rigidezza)" value="${esc(name||"")}">
+    <input type="text" class="c-value" placeholder="Valore (es. TBD)" value="${esc(value||"")}">
+    <button type="button" class="c-del" title="Rimuovi">×</button>
+  `;
+  row.querySelector(".c-del").addEventListener("click", ()=>row.remove());
+  container.appendChild(row);
+  return row;
+}
+function setCustomParams(list){
+  const container = document.getElementById("customParams");
+  container.innerHTML = "";
+  (list||[]).forEach(c => addCustomRow(c.name, c.value));
+}
+function getCustomParamsFromModal(){
+  const rows = document.querySelectorAll("#customParams .custom-row");
+  const out = [];
+  rows.forEach(row=>{
+    const n = row.querySelector(".c-name").value.trim();
+    const v = row.querySelector(".c-value").value.trim();
+    if(n) out.push({name:n, value:v});
+  });
+  return out;
+}
+
+/* ============================================================
+   CATEGORIE DROPDOWN (HW)
+   ============================================================ */
+function populateCategoriaSelect(currentValue){
+  const sel = document.getElementById("hwE_categoria");
+  const cats = new Set(DEFAULT_CATEGORIES);
+  HW.forEach(h => { if(h.categoria) cats.add(h.categoria); });
+  const sorted = Array.from(cats).sort(sortCategories);
+  sel.innerHTML = sorted.map(c =>
+    `<option value="${esc(c)}">${esc(c)}</option>`
+  ).join("") + `<option value="__NEW__">➕ Nuova categoria…</option>`;
+  if(currentValue){
+    sel.value = currentValue;
+    if(sel.value !== currentValue){
+      const opt = document.createElement("option");
+      opt.value = currentValue; opt.textContent = currentValue; opt.selected = true;
+      sel.insertBefore(opt, sel.lastChild);
+    }
+  } else if(sel.options.length){
+    sel.selectedIndex = 0;
+  }
+}
+
+/* ============================================================
+   TOGGLE YES/NO + SELECT "NEW"
+   ============================================================ */
+function setToggle(field, value){
+  const group = document.querySelector(`.toggle-group[data-target="${field}"]`);
+  if(!group) return;
+  const v = (value || "NO").toUpperCase();
+  const val = (v === "YES" || v.startsWith("YES")) ? "YES" : "NO";
+  group.querySelectorAll(".toggle-btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.val === val);
+  });
+  document.getElementById(field).value = val;
+}
+function getToggle(field){
+  return document.getElementById(field).value || "NO";
+}
+
+function bindSelectNew(selectId, onNew){
+  const sel = document.getElementById(selectId);
+  if(!sel) return;
+  sel.addEventListener("change", function(e){
+    if(e.target.value === "__NEW__"){
+      const name = prompt(onNew.promptText);
+      if(name && name.trim()){
+        const clean = name.trim();
+        onNew.onAdded(clean);
+      } else {
+        /* torna al primo valore disponibile */
+        if(e.target.options.length > 1) e.target.selectedIndex = 0;
+      }
+    }
+  });
+}
+
+function bindToggles(){
+  document.querySelectorAll(".toggle-group").forEach(group=>{
+    group.querySelectorAll(".toggle-btn").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const target = group.dataset.target;
+        group.querySelectorAll(".toggle-btn").forEach(b =>
+          b.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById(target).value = btn.dataset.val;
+      });
+    });
+  });
+
+  /* HW Categoria: gestione "Nuova categoria" */
+  bindSelectNew("hwE_categoria", {
+    promptText: "Nome della nuova categoria (es. Proto, RF, Test):",
+    onAdded: (clean) => {
+      const sel = document.getElementById("hwE_categoria");
+      const exists = Array.from(sel.options).some(o => o.value === clean);
+      if(exists){ sel.value = clean; return; }
+      const opt = document.createElement("option");
+      opt.value = clean; opt.textContent = clean; opt.selected = true;
+      sel.insertBefore(opt, sel.lastChild);
+    }
+  });
+
+  /* Documenti — Tipo: gestione "Nuovo tipo" */
+  bindSelectNew("docE_tipo", {
+    promptText: "Nome della nuova tipologia documento (es. Nota tecnica):",
+    onAdded: (clean) => {
+      if(!docTipi.includes(clean)) docTipi.push(clean);
+      populateDocTipoSelect(clean);
+      saveToStorage();
+      toast(`➕ Tipo "${clean}" aggiunto`);
+    }
+  });
+
+  /* Documenti — Responsabile: gestione "Nuovo responsabile" */
+  bindSelectNew("docE_responsabile", {
+    promptText: "Nome del nuovo responsabile (es. Mario Rossi):",
+    onAdded: (clean) => {
+      if(!responsabili.includes(clean)) responsabili.push(clean);
+      populateDocResponsabileSelect(clean);
+      saveToStorage();
+      toast(`👤 "${clean}" aggiunto ai responsabili`);
+    }
+  });
+}
+
+/* ============================================================
+   HW EDIT / NEW
+   ============================================================ */
+function openHwNew(){
+  document.getElementById("hwEditId").value = "";
+  document.getElementById("hwEditMode").value = "new";
+  document.getElementById("hwEditTitle").textContent = "Nuovo componente";
+  populateCategoriaSelect("Heavy");
+  const set = (elId, v) => {
+    const el = document.getElementById(elId);
+    if(el) el.value = (v ?? "");
+  };
+  set("hwE_id", ""); set("hwE_name", "");
+  set("hwE_sn", ""); set("hwE_modello", "");
+  set("hwE_montato", "NO");
+  set("hwE_qualifica", "N/A");
+  set("hwE_notes", "");
+  setToggle("hwE_colla", "NO");
+  setToggle("hwE_heaters", "NO");
+  setToggle("hwE_cablato", "NO");
+  setToggle("hwE_funzionali", "NO");
+  setCustomParams([]);
+  document.getElementById("hwEditBg").classList.add("open");
+  setTimeout(()=>document.getElementById("hwE_id").focus(), 100);
+}
+function openHwEdit(id){
+  const h = HW.find(x=>x.id===id);
+  if(!h) return;
+  document.getElementById("hwEditId").value = id;
+  document.getElementById("hwEditMode").value = "edit";
+  document.getElementById("hwEditTitle").textContent = "Modifica " + h.nome;
+  populateCategoriaSelect(h.categoria);
+  const set = (elId, v) => {
+    const el = document.getElementById(elId);
+    if(el) el.value = (v ?? "");
+  };
+  set("hwE_id", h.id);
+  set("hwE_name", h.nome);
+  set("hwE_sn", h.sn);
+  set("hwE_modello", h.modello);
+  set("hwE_montato", h.montato || "NO");
+  set("hwE_qualifica", h.qualifica || "N/A");
+  set("hwE_notes", h.notes);
+  setToggle("hwE_colla", h.colla);
+  setToggle("hwE_heaters", h.heaters);
+  setToggle("hwE_cablato", h.cablato);
+  setToggle("hwE_funzionali", h.funzionali);
+  setCustomParams(h.custom || []);
+  document.getElementById("hwEditBg").classList.add("open");
+}
+function closeHwEdit(){
+  document.getElementById("hwEditBg").classList.remove("open");
+}
+function saveHwEdit(){
+  const mode = document.getElementById("hwEditMode").value;
+  const newId = document.getElementById("hwE_id").value.trim().toUpperCase();
+  if(!newId){ alert("L'ID è obbligatorio (es. EM8, SCU6)"); return; }
+  const g = elId => document.getElementById(elId).value;
+  const custom = getCustomParamsFromModal();
+
+  const obj = {
+    id: newId,
+    nome: g("hwE_name") || newId,
+    sn: g("hwE_sn"),
+    modello: g("hwE_modello"),
+    categoria: g("hwE_categoria") || "Senza categoria",
+    montato: g("hwE_montato"),
+    colla: getToggle("hwE_colla"),
+    heaters: getToggle("hwE_heaters"),
+    cablato: getToggle("hwE_cablato"),
+    funzionali: getToggle("hwE_funzionali"),
+    qualifica: g("hwE_qualifica"),
+    custom: custom,
+    notes: g("hwE_notes")
+  };
+
+  if(mode === "new"){
+    if(HW.find(x => x.id === newId)){
+      alert(`Esiste già un HW con ID "${newId}"`);
+      return;
+    }
+    HW.push(obj);
+  } else {
+    const oldId = document.getElementById("hwEditId").value;
+    const h = HW.find(x => x.id === oldId);
+    if(!h) return;
+    if(newId !== h.id && HW.find(x => x.id === newId)){
+      alert(`Esiste già un HW con ID "${newId}"`);
+      return;
+    }
+    Object.assign(h, obj);
+  }
+  closeHwEdit();
+  saveToStorage();
+  renderAll();
+  toast(mode === "new" ? `➕ ${newId} creato` : "💾 Modifiche salvate");
+}
+function deleteHw(id){
+  const h = HW.find(x => x.id === id);
+  if(!h) return;
+  if(!confirm(`Eliminare "${h.nome}" (${h.id})?\n\nL'operazione è irreversibile.`)) return;
+  HW = HW.filter(x => x.id !== id);
+  saveToStorage();
+  renderAll();
+  toast(`🗑️ ${id} eliminato`);
+}
+
+/* ============================================================
+   HW DETAIL
+   ============================================================ */
+function showHwDetail(id){
+  const h = HW.find(x=>x.id===id);
+  if(!h) return;
+  const rel = relatedTasks(h.id);
+  document.getElementById("hwModalTitle").textContent = h.nome;
+  document.getElementById("hwModalSub").textContent =
+    `${h.categoria || "—"} · Modello ${h.modello || "—"} · SN ${h.sn || "—"}`;
+  let body = `<div class="hw-flags" style="margin-bottom:14px">
+    ${h.montato ? `<span class="flag ${flagClass(h.montato)}">Montato: ${esc(h.montato)}</span>`:""}
+    <span class="flag ${flagClass(h.colla)}">🧴 Colla: ${esc(h.colla||"—")}</span>
+    <span class="flag ${flagClass(h.heaters)}">🔥 Heater: ${esc(h.heaters||"—")}</span>
+    <span class="flag ${flagClass(h.cablato)}">🔌 Cablato: ${esc(h.cablato||"—")}</span>
+    <span class="flag ${flagClass(h.funzionali)}">⚙️ Funzionali: ${esc(h.funzionali||"—")}</span>
+    <span class="flag ${flagClass(h.qualifica)}">🏆 ${esc(h.qualifica||"—")}</span>
+  </div>`;
+  if(h.custom && h.custom.length){
+    body += `<div class="field"><label>Parametri personalizzati</label>
+      <div class="hw-flags" style="padding:10px;background:var(--bg2);border-radius:8px">
+        ${h.custom.map(c => `<span class="flag custom"><b>${esc(c.name)}:</b> ${esc(c.value)}</span>`).join("")}
+      </div></div>`;
+  }
+  if(h.notes){
+    body += `<div class="field"><label>Note</label>
+      <div style="padding:10px;background:var(--bg2);border-radius:8px;font-size:13px">${esc(h.notes)}</div></div>`;
+  }
+  body += `<div class="field"><label>Attività collegate (${rel.length})</label>
+    <div style="max-height:260px;overflow-y:auto">
+      ${rel.length === 0 ? `<div style="color:var(--muted);font-style:italic;font-size:12.5px">Nessuna menzione</div>` :
+        rel.map(t=>`<div style="padding:8px 10px;background:var(--bg2);border-radius:8px;margin-bottom:6px;display:flex;align-items:center;gap:8px;font-size:12.5px">
+          <span class="status-pill" data-st="${t.status}" style="font-size:10.5px;padding:2px 8px">${STATUS_ICON[t.status]||""}</span>
+          <span style="flex:1">${esc(t.desc)}</span>
+          <span style="color:var(--muted);font-size:11px">${esc(t.week||"")}</span>
+        </div>`).join("")}
+    </div></div>`;
+  document.getElementById("hwModalBody").innerHTML = body;
+  document.getElementById("hwModalAdd").onclick = ()=>{ closeHwModal(); quickAddFor(h.id); };
+  document.getElementById("hwModalBg").classList.add("open");
+}
+function closeHwModal(){
+  document.getElementById("hwModalBg").classList.remove("open");
+}
+function quickAddFor(hwId){
+  openModal(null);
+  currentHw = [hwId];
+  renderHwChips();
+  setTimeout(()=>{ document.getElementById("fDesc").focus(); }, 100);
+}
+
+/* ============================================================
+   DASHBOARD
+   ============================================================ */
+function renderDashboard(){
+  const el = document.getElementById("dashContent");
+  if(!el) return;
+  const counts = {};
+  HW.forEach(h => { const k = h.categoria || "Senza categoria"; counts[k] = (counts[k]||0) + 1; });
+  const modelloCounts = {};
+  HW.forEach(h => { const m = h.modello || "—"; modelloCounts[m] = (modelloCounts[m]||0) + 1; });
+
+  function yesNo(list, field){
+    let yes=0, no=0, na=0;
+    list.forEach(h=>{
+      const v = String(h[field]||"").toUpperCase();
+      if(v==="YES" || v.startsWith("YES") || v === "SI" || v === "SÌ") yes++;
+      else if(v==="NO") no++;
+      else na++;
+    });
+    return {yes, no, na, tot: list.length};
+  }
+  const fixedRows = [
+    {k:"🧴 Colla",       v: yesNo(HW, "colla")},
+    {k:"🔥 Heaters",     v: yesNo(HW, "heaters")},
+    {k:"🔌 Cablato",     v: yesNo(HW, "cablato")},
+    {k:"🔧 Montato",     v: yesNo(HW, "montato")},
+    {k:"⚙️ Funzionali",  v: yesNo(HW, "funzionali")}
+  ];
+  const customCounts = {};
+  HW.forEach(h => {
+    (h.custom||[]).forEach(c => {
+      if(!c.name) return;
+      if(!customCounts[c.name]) customCounts[c.name] = {yes:0, no:0, other:0, total:0};
+      customCounts[c.name].total++;
+      const v = String(c.value||"").toUpperCase();
+      if(v==="YES" || v.startsWith("YES")) customCounts[c.name].yes++;
+      else if(v==="NO") customCounts[c.name].no++;
+      else customCounts[c.name].other++;
+    });
+  });
+  const customRows = Object.keys(customCounts)
+    .filter(n => customCounts[n].total >= 2)
+    .sort()
+    .map(n => ({k:n, v:customCounts[n]}));
+  const byStatus = {};
+  STATUS_CYCLE.forEach(s => byStatus[s] = tasks.filter(t=>t.status===s).length);
+  const cats = Object.keys(counts).sort(sortCategories);
+
+  const docByStato = {};
+  DOC_STATES.forEach(s => docByStato[s] = docs.filter(d=>d.stato===s).length);
+
+  el.innerHTML = `
+    <div class="dash-grid">
+      <div class="dash-card">
+        <h3><span class="ico">🔧</span> Riepilogo Hardware</h3>
+        <div class="counters">
+          ${cats.map(c=>`
+            <div class="counter">
+              <div class="n" style="color:${categoryColor(c)}">${counts[c]||0}</div>
+              <div class="l">${esc(c)}</div>
+            </div>`).join("")}
+        </div>
+        <h4>Per modello</h4>
+        <table class="stat-table">
+          <tbody>
+            ${Object.keys(modelloCounts).sort().map(m=>`
+              <tr><td>${esc(m)}</td><td class="num">${modelloCounts[m]}</td></tr>
+            `).join("")}
+          </tbody>
+        </table>
+        <h4>Stato integrazione (parametri fissi)</h4>
+        <table class="stat-table">
+          <thead><tr><th>Parametro</th><th style="text-align:right">Sì</th>
+            <th style="text-align:right">No</th><th style="text-align:right">N/A</th>
+            <th style="width:80px">Distribuz.</th></tr></thead>
+          <tbody>
+            ${fixedRows.map(r=>{
+              const tot = r.v.tot || 1;
+              return `<tr>
+                <td>${r.k}</td>
+                <td class="num yes">${r.v.yes}</td>
+                <td class="num no">${r.v.no}</td>
+                <td class="num na">${r.v.na}</td>
+                <td><div class="bar-mini">
+                  <div class="seg yes" style="width:${r.v.yes/tot*100}%"></div>
+                  <div class="seg no" style="width:${r.v.no/tot*100}%"></div>
+                  <div class="seg na" style="width:${r.v.na/tot*100}%"></div>
+                </div></td>
+              </tr>`;
+            }).join("")}
+          </tbody>
+        </table>
+        ${customRows.length ? `
+          <h4>Parametri personalizzati (in ≥2 HW)</h4>
+          <table class="stat-table">
+            <thead><tr><th>Nome</th><th style="text-align:right">Sì</th>
+              <th style="text-align:right">No</th><th style="text-align:right">Altro</th>
+              <th style="text-align:right">Totale</th></tr></thead>
+            <tbody>
+              ${customRows.map(r=>`
+                <tr>
+                  <td>${esc(r.k)}</td>
+                  <td class="num yes">${r.v.yes}</td>
+                  <td class="num no">${r.v.no}</td>
+                  <td class="num na">${r.v.other}</td>
+                  <td class="num">${r.v.total}</td>
+                </tr>`).join("")}
+            </tbody>
+          </table>
+        ` : ""}
+      </div>
+      <div class="dash-card">
+        <h3><span class="ico">🗂️</span> Riepilogo Attività</h3>
+        <div class="counters">
+          <div class="counter"><div class="n">${tasks.length}</div><div class="l">Totali</div></div>
+          <div class="counter ok"><div class="n">${byStatus["Fatto"]||0}</div><div class="l">Fatte</div></div>
+          <div class="counter wip"><div class="n">${byStatus["In corso"]||0}</div><div class="l">In corso</div></div>
+          <div class="counter todo"><div class="n">${byStatus["Da fare"]||0}</div><div class="l">Da fare</div></div>
+          <div class="counter blk"><div class="n">${(byStatus["Blocked"]||0)+(byStatus["TBD"]||0)}</div><div class="l">Blocked/TBD</div></div>
+        </div>
+        <table class="stat-table">
+          <thead><tr><th>Stato</th><th style="text-align:right">Numero</th></tr></thead>
+          <tbody>
+            ${STATUS_CYCLE.map(s=>`
+              <tr>
+                <td>${STATUS_ICON[s]} ${esc(s)}</td>
+                <td class="num">${byStatus[s]||0}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+      <div class="dash-card">
+        <h3><span class="ico">📄</span> Riepilogo Documenti</h3>
+        <div class="counters">
+          <div class="counter"><div class="n">${docs.length}</div><div class="l">Totali</div></div>
+          <div class="counter ok"><div class="n">${docByStato["Approvato"]||0}</div><div class="l">Approvati</div></div>
+          <div class="counter wip"><div class="n">${(docByStato["Consegnato"]||0)+(docByStato["In corso"]||0)}</div><div class="l">In corso/Consegnati</div></div>
+          <div class="counter todo"><div class="n">${docByStato["Da fare"]||0}</div><div class="l">Da fare</div></div>
+          <div class="counter blk"><div class="n">${(docByStato["Bloccato"]||0)+(docByStato["TBD"]||0)}</div><div class="l">Blocked/TBD</div></div>
+        </div>
+        <table class="stat-table">
+          <thead><tr><th>Stato</th><th style="text-align:right">Numero</th></tr></thead>
+          <tbody>
+            ${DOC_STATES.map(s=>`
+              <tr>
+                <td>${DOC_STATE_ICON[s]||"⚪"} ${esc(s)}</td>
+                <td class="num">${docByStato[s]||0}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+/* ============================================================
+   STATUS CYCLE
+   ============================================================ */
+function cycleStatus(id){
+  const t = tasks.find(x=>x.id===id);
+  if(!t) return;
+  const i = STATUS_CYCLE.indexOf(t.status);
+  const next = STATUS_CYCLE[(i+1) % STATUS_CYCLE.length];
+  t.status = next;
+  if(next==="Fatto") t.prog = 100;
+  else if(next==="Da fare" && t.prog===100) t.prog = 0;
+  saveToStorage();
+  renderAll();
+  toast(`${STATUS_ICON[next]} ${next}`);
+}
+
+/* ============================================================
+   OWNER CHIPS
+   ============================================================ */
+function renderOwnerChips(){
+  const container = document.getElementById("ownerChips");
+  if(!container) return;
+  container.innerHTML = currentOwners.map(name => `
+    <span class="owner-chip">
+      <span class="avatar-mini">${initials(name)}</span>
+      ${esc(name)}
+      <button type="button" class="rm" data-name="${esc(name)}" title="Rimuovi">×</button>
+    </span>
+  `).join("");
+  container.querySelectorAll(".rm").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const n = btn.dataset.name;
+      currentOwners = currentOwners.filter(x => x !== n);
+      renderOwnerChips();
+    });
+  });
+  document.getElementById("fOwner").value = joinOwners(currentOwners);
+}
+function openOwnerPicker(){
+  const body = document.getElementById("ownerPickerBody");
+  const title = document.getElementById("pickerTitle");
+  if(title) title.textContent = "👥 Seleziona persona";
+  const people = getAllKnownPeople();
+  let html = "";
+  if(people.length === 0){
+    html += `<div style="padding:14px;color:var(--muted);font-size:12.5px;
+      text-align:center;font-style:italic">Nessuna persona ancora registrata.
+      Creane una nuova qui sotto.</div>`;
+  } else {
+    html = people.map(p => {
+      const used = currentOwners.includes(p);
+      return `<div class="owner-pick-item ${used?'used':''}" data-name="${esc(p)}">
+        <span class="avatar-mini">${initials(p)}</span>
+        <span style="flex:1">${esc(p)}</span>
+        ${used ? `<span style="font-size:11px;color:var(--green)">✓</span>` : ""}
+        <span class="row-actions">
+          <button type="button" class="row-act" data-edit="${esc(p)}" title="Rinomina ovunque">✎</button>
+          <button type="button" class="row-act del" data-delete="${esc(p)}" title="Rimuovi da tutte le attività">✕</button>
+        </span>
+      </div>`;
+    }).join("");
+  }
+  html += `<div class="owner-pick-item" id="pickNewPerson" style="border-top:1px solid var(--line);margin-top:6px">
+    <span class="avatar-mini" style="background:var(--green-bg);color:var(--green)">+</span>
+    <span class="new-person">➕ Nuova persona…</span>
+  </div>`;
+  body.innerHTML = html;
+
+  body.querySelectorAll(".owner-pick-item[data-name]").forEach(el=>{
+    el.addEventListener("click", (e)=>{
+      if(e.target.closest(".row-act")) return;
+      const n = el.dataset.name;
+      if(!currentOwners.includes(n)){
+        currentOwners.push(n);
+        renderOwnerChips();
+      }
+      closeOwnerPicker();
+    });
+  });
+
+  body.querySelectorAll(".row-act[data-edit]").forEach(btn=>{
+    btn.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      const oldName = btn.dataset.edit;
+      const newName = prompt(
+        `Rinomina "${oldName}" in TUTTE le attività e documenti.\n\nNuovo nome:`,
+        oldName
+      );
+      if(newName === null) return;
+      const clean = newName.trim();
+      if(!clean || clean === oldName){
+        toast("Nessuna modifica");
+        return;
+      }
+      const n = renamePersonGlobally(oldName, clean);
+      if(currentOwners.includes(oldName)){
+        currentOwners = currentOwners.map(o => o === oldName ? clean : o);
+        renderOwnerChips();
+      }
+      saveToStorage();
+      renderAll();
+      toast(`✎ "${oldName}" → "${clean}" · ${n} aggiornamenti`);
+      openOwnerPicker();
+    });
+  });
+
+  body.querySelectorAll(".row-act[data-delete]").forEach(btn=>{
+    btn.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      const name = btn.dataset.delete;
+      if(!confirm(`Rimuovere "${name}" da TUTTE le attività e documenti?\n\n` +
+                  `(I record restano, viene solo tolto il riferimento)`)) return;
+      const n = deletePersonGlobally(name);
+      if(currentOwners.includes(name)){
+        currentOwners = currentOwners.filter(o => o !== name);
+        renderOwnerChips();
+      }
+      saveToStorage();
+      renderAll();
+      toast(`🗑️ "${name}" rimosso da ${n} record`);
+      openOwnerPicker();
+    });
+  });
+
+  body.querySelector("#pickNewPerson").addEventListener("click", ()=>{
+    const name = prompt("Nome della nuova persona (es. Mario Rossi):");
+    if(name && name.trim()){
+      const clean = name.trim();
+      if(!responsabili.includes(clean)) responsabili.push(clean);
+      if(!currentOwners.includes(clean)) currentOwners.push(clean);
+      renderOwnerChips();
+      saveToStorage();
+    }
+    closeOwnerPicker();
+  });
+
+  document.getElementById("ownerPickerBg").classList.add("open");
+}
+
+function closeOwnerPicker(){
+  document.getElementById("ownerPickerBg").classList.remove("open");
+}
+
+/* ============================================================
+   HW CHIPS
+   ============================================================ */
+function renderHwChips(){
+  const container = document.getElementById("hwChips");
+  if(!container) return;
+  container.innerHTML = currentHw.map(id => {
+    const h = HW.find(x => x.id === id);
+    const label = h ? `${id} · ${h.nome}` : id;
+    return `
+      <span class="hw-chip">
+        ${esc(label)}
+        <button type="button" class="rm" data-id="${esc(id)}" title="Rimuovi">×</button>
+      </span>
+    `;
+  }).join("");
+  container.querySelectorAll(".rm").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const n = btn.dataset.id;
+      currentHw = currentHw.filter(x => x !== n);
+      renderHwChips();
+    });
+  });
+  document.getElementById("fHw").value = currentHw.join(",");
+}
+function openHwPicker(){
+  const body = document.getElementById("ownerPickerBody");
+  const title = document.getElementById("pickerTitle");
+  title.textContent = "🔧 Seleziona componente HW";
+  const all = HW.slice().sort((a,b)=>a.id.localeCompare(b.id));
+  let html = "";
+  if(all.length === 0){
+    html += `<div style="padding:14px;color:var(--muted);font-size:12.5px;
+      text-align:center;font-style:italic">Nessun HW caricato.</div>`;
+  } else {
+    html = all.map(h => {
+      const used = currentHw.includes(h.id);
+      const color = categoryColor(h.categoria);
+      return `<div class="owner-pick-item ${used?'used':''}" data-hwid="${esc(h.id)}">
+        <span class="avatar-mini" style="background:${color}22;color:${color}">${esc(h.id.substring(0,3))}</span>
+        <span style="flex:1"><b>${esc(h.id)}</b> · ${esc(h.nome)}</span>
+        ${used ? `<span style="font-size:11px;color:var(--green)">✓</span>` : ""}
+      </div>`;
+    }).join("");
+  }
+  body.innerHTML = html;
+  body.querySelectorAll(".owner-pick-item[data-hwid]").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      const id = el.dataset.hwid;
+      if(!currentHw.includes(id)){
+        currentHw.push(id);
+        renderHwChips();
+      }
+      closeOwnerPicker();
+    });
+  });
+  document.getElementById("ownerPickerBg").classList.add("open");
+}
+
+/* ============================================================
+   TASK MODAL
+   ============================================================ */
+function openModal(task){
+  document.getElementById("modalTitle").textContent = task ? "Modifica attività" : "Nuova attività";
+  document.getElementById("fId").value = task ? task.id : "";
+  document.getElementById("fDesc").value = task ? task.desc : "";
+  currentOwners = task ? splitOwners(task.owner) : [];
+  renderOwnerChips();
+  currentHw = task ? (task.hw || []) : [];
+  renderHwChips();
+  document.getElementById("fWeekM").value = task ? dateToIso(task.week) : "";
+  document.getElementById("fDue").value = task ? task.due : "";
+  document.getElementById("fStatusM").value = task ? task.status : "Da fare";
+  document.getElementById("fProg").value = task ? task.prog : 0;
+  document.getElementById("fNote").value = task ? (task.note||"") : "";
+  document.getElementById("modalBg").classList.add("open");
+  setTimeout(()=>document.getElementById("fDesc").focus(), 100);
+}
+function closeModal(){
+  document.getElementById("modalBg").classList.remove("open");
+}
+function editTask(id){
+  const t = tasks.find(x=>x.id===id);
+  if(t) openModal(t);
+}
+function delTask(id){
+  if(!confirm("Eliminare questa attività?")) return;
+  tasks = tasks.filter(t=>t.id!==id);
+  saveToStorage();
+  renderAll();
+  toast("🗑️ Eliminata");
+}
+function saveTask(){
+  const id = document.getElementById("fId").value;
+  const desc = document.getElementById("fDesc").value.trim();
+  if(!desc){ alert("Inserisci una descrizione."); return; }
+  const data = {
+    desc,
+    owner: joinOwners(currentOwners),
+    week: dateToIt(document.getElementById("fWeekM").value),
+    due: document.getElementById("fDue").value,
+    status: document.getElementById("fStatusM").value,
+    prog: Math.max(0, Math.min(100, +document.getElementById("fProg").value||0)),
+    hw: currentHw.slice(),
+    note: document.getElementById("fNote").value.trim()
+  };
+  /* Registra gli owner nella lista globale responsabili per coerenza */
+  currentOwners.forEach(o => {
+    if(o && o.trim() && !responsabili.includes(o.trim())) responsabili.push(o.trim());
+  });
+  if(id){
+    Object.assign(tasks.find(x=>x.id===+id), data);
+  } else {
+    const newId = tasks.length ? Math.max(...tasks.map(t=>t.id))+1 : 1;
+    tasks.push({id:newId, ...data});
+  }
+  closeModal();
+  saveToStorage();
+  renderAll();
+  toast("💾 Salvato");
+}
+
+/* ============================================================
+   RENDER ALL
+   ============================================================ */
+function renderAll(){
+  renderOwnerFilterChips();
+  renderTasks();
+  const bT = document.getElementById("tabCountTasks");
+  const bH = document.getElementById("tabCountHw");
+  const bD = document.getElementById("tabCountDocs");
+  if(bT) bT.textContent = tasks.length;
+  if(bH) bH.textContent = HW.length;
+  if(bD) bD.textContent = docs.length;
+  const cur = document.querySelector(".panel.active");
+  if(cur){
+    if(cur.id==="panel-hw") renderHW();
+    if(cur.id==="panel-docs") renderDocs();
+    if(cur.id==="panel-dash") renderDashboard();
+  }
+  document.getElementById("lastUpdate").textContent =
+    new Date().toLocaleString("it-IT",{day:"2-digit",month:"short",
+                                       hour:"2-digit",minute:"2-digit"});
+  updateDatasource();
+}
+
+/* ============================================================
+   TABS
+   ============================================================ */
+function switchTab(tab){
+  document.querySelectorAll(".tab").forEach(t =>
+    t.classList.toggle("active", t.dataset.tab===tab));
+  document.querySelectorAll(".panel").forEach(p =>
+    p.classList.toggle("active", p.id==="panel-"+tab));
+  if(tab==="hw") renderHW();
+  if(tab==="docs") renderDocs();
+  if(tab==="dash") renderDashboard();
+}
+function goToHw(id){
+  const h = HW.find(x => x.id === id);
+  if(!h){ toast("HW non trovato"); return; }
+  switchTab("hw");
+  setTimeout(()=>{ showHwDetail(id); }, 100);
+}
+
+/* ============================================================
+   THEME
+   ============================================================ */
+function applyTheme(t){
+  document.documentElement.setAttribute("data-theme", t);
+  document.getElementById("themeBtn").textContent = t==="dark" ? "☀️" : "🌙";
+  localStorage.setItem(THEME_KEY, t);
+}
+
+/* ============================================================
+   RESET
+   ============================================================ */
+function resetAll(){
+  if(!confirm("Cancellare tutti i dati correnti e ricominciare?\n\n" +
+              "Suggerimento: esporta prima i CSV se vuoi tenerli.")) return;
+  clearStorage();
+  HW = [];
+  tasks = [];
+  docs = [];
+  responsabili = [];
+  docTipi = [];
+  renderAll();
+  toast("🗑️ Dati cancellati");
+}
+
+/* ============================================================
+   SAFE BINDING
+   ============================================================ */
+function safeBind(id, event, handler){
+  const el = document.getElementById(id);
+  if(el) el.addEventListener(event, handler);
+  else console.warn("[safeBind] Elemento non trovato:", id);
+}
+
+/* ============================================================
+   EVENTS
+   ============================================================ */
+function bindEvents(){
+  document.querySelectorAll(".tab").forEach(t =>
+    t.addEventListener("click", ()=>switchTab(t.dataset.tab)));
+
+  safeBind("btnAdd", "click", ()=>openModal(null));
+  safeBind("addOwnerBtn", "click", openOwnerPicker);
+  safeBind("addHwBtn", "click", openHwPicker);
+  safeBind("ownerPickerClose", "click", closeOwnerPicker);
+  safeBind("ownerPickerBg", "click", e=>{
+    if(e.target === document.getElementById("ownerPickerBg")) closeOwnerPicker();
+  });
+  safeBind("btnCancel", "click", closeModal);
+  safeBind("btnSave", "click", saveTask);
+  safeBind("btnPrint", "click", ()=>window.print());
+  safeBind("btnSummary", "click", openSummaryModal);
+  safeBind("sumCopyText", "click", summaryCopyText);
+  safeBind("sumDownloadSvg", "click", summaryDownloadSVG);
+  safeBind("sumDownloadPng", "click", summaryDownloadPNG);
+  safeBind("sumRefresh", "click", openSummaryModal);
+  safeBind("search", "input", ()=>renderTasks());
+    /* Ordinamento */
+  safeBind("sortSelect", "change", (e)=>{
+    sortBy = e.target.value;
+    renderTasks();
+  });
+  safeBind("sortDirBtn", "click", ()=>{
+    sortDir = sortDir === "asc" ? "desc" : "asc";
+    const btn = document.getElementById("sortDirBtn");
+    if(btn){
+      btn.textContent = sortDir === "asc" ? "↑" : "↓";
+      btn.title = sortDir === "asc"
+        ? "Crescente (clicca per invertire)"
+        : "Decrescente (clicca per invertire)";
+    }
+    renderTasks();
+  });
+
+  safeBind("themeBtn", "click", ()=>{
+    const cur = document.documentElement.getAttribute("data-theme");
+    applyTheme(cur==="dark" ? "light" : "dark");
+  });
+
+  safeBind("btnFolder", "click", async ()=>{
+    if(folderHandle){
+      const scelta = confirm(
+        `Cartella attualmente collegata: "${folderHandle.name}"\n\n` +
+        `OK      = scegli una NUOVA cartella (cambio progetto)\n` +
+        `Annulla = ricarica dai file della cartella attuale`
+      );
+      if(scelta){
+        /* NON azzerare folderHandle! safeSwitchFolder lo usa per salvare prima */
+        await safeSwitchFolder();
+      } else {
+        /* Ricarica dalla cartella corrente (invariato) */
+        const ok = await verifyPermission(folderHandle, true);
+        if(ok){
+          const loaded = await loadFromFolder();
+          if(loaded){
+            saveToStorage();
+            renderAll();
+            toast(`📁 Ricaricato da "${folderHandle.name}"`);
+          } else {
+            toast("⚠️ File CSV non trovati nella cartella");
+          }
+        }
+      }
+      return;
+    }
+    await safeSwitchFolder();
+  });
+
+  safeBind("btnImport", "click", ()=>
+    document.getElementById("hiddenFileInput").click());
+  safeBind("hiddenFileInput", "change", e=>{
+    if(e.target.files.length) importFiles(e.target.files);
+    e.target.value = "";
+  });
+  safeBind("btnExport", "click", openExportModal);
+  safeBind("btnReset", "click", resetAll);
+  safeBind("reconnectBtn", "click", async ()=>{
+    const nuova = confirm(
+      `Vuoi scegliere una NUOVA cartella?\n\n` +
+      `OK      = scegli nuova cartella\n` +
+      `Annulla = ricollega la cartella salvata "${savedFolderHandle?.name || "?"}"`
+    );
+    if(nuova){
+      /* NON azzerare folderHandle qui! */
+      hideReconnectBanner();
+      await safeSwitchFolder();
+    } else {
+      await reconnectFolder();
+    }
+  });
+  safeBind("reconnectClose", "click", hideReconnectBanner);
+
+  const drop = document.getElementById("dropzone");
+  if(drop){
+    ["dragenter","dragover"].forEach(ev => drop.addEventListener(ev, e=>{
+      e.preventDefault(); drop.classList.add("over");
+    }));
+    ["dragleave","drop"].forEach(ev => drop.addEventListener(ev, e=>{
+      e.preventDefault(); drop.classList.remove("over");
+    }));
+    drop.addEventListener("drop", e => {
+      if(e.dataTransfer.files.length) importFiles(e.dataTransfer.files);
+    });
+  }
+  document.addEventListener("dragover", e => e.preventDefault());
+  document.addEventListener("drop", e => {
+    if(e.dataTransfer && e.dataTransfer.files.length &&
+       !e.target.closest(".dropzone")){
+      e.preventDefault();
+      importFiles(e.dataTransfer.files);
+    }
+  });
+  safeBind("dropImportBtn", "click", ()=>
+    document.getElementById("hiddenFileInput").click());
+  safeBind("dropSeedBtn", "click", ()=>{
+    if(!confirm("Caricare i dati di esempio?")) return;
+    HW = JSON.parse(JSON.stringify(SEED_HW));
+    tasks = JSON.parse(JSON.stringify(SEED_TASKS));
+    docs = JSON.parse(JSON.stringify(SEED_DOCS));
+    saveToStorage();
+    renderAll();
+    toast("✅ Dati di esempio caricati");
+  });
+
+  safeBind("btnAddDoc", "click", openDocNew);
+  safeBind("btnExportDocs", "click", downloadDocsCSV);
+  safeBind("docEditCancel", "click", closeDocEdit);
+  safeBind("docEditSave", "click", saveDocEdit);
+  safeBind("docDetailClose", "click", closeDocModal);
+  safeBind("docClear", "click", ()=>{
+    activeDocTipo = null;
+    document.querySelectorAll("#docFilterChips .chip").forEach(c =>
+      c.classList.remove("active"));
+    renderDocs();
+  });
+  safeBind("docEditBg", "click", e=>{
+    if(e.target === document.getElementById("docEditBg")) closeDocEdit();
+  });
+  safeBind("docModalBg", "click", e=>{
+    if(e.target === document.getElementById("docModalBg")) closeDocModal();
+  });
+
+  safeBind("btnAddHw", "click", openHwNew);
+  safeBind("hwEditCancel", "click", closeHwEdit);
+  safeBind("hwEditSave", "click", saveHwEdit);
+  safeBind("hwDetailClose", "click", closeHwModal);
+  safeBind("addCustomBtn", "click", ()=>{
+    const row = addCustomRow("", "");
+    row.querySelector(".c-name").focus();
+  });
+
+  document.querySelectorAll("#viewToggle button").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      document.querySelectorAll("#viewToggle button").forEach(x =>
+        x.classList.remove("active"));
+      b.classList.add("active");
+      currentView = b.dataset.view;
+      renderTasks();
+    });
+  });
+
+  document.querySelectorAll(".chip[data-status]").forEach(c=>{
+    c.addEventListener("click", ()=>{
+      const v = c.dataset.status;
+      if(activeStatus===v){ activeStatus=null; c.classList.remove("active"); }
+      else {
+        activeStatus=v;
+        document.querySelectorAll(".chip[data-status]").forEach(x =>
+          x.classList.remove("active"));
+        c.classList.add("active");
+      }
+      renderTasks();
+    });
+  });
+  safeBind("clearFilters", "click", ()=>{
+    activeStatus = null;
+    activeOwner = null;
+    document.querySelectorAll(".chip[data-status]").forEach(c =>
+      c.classList.remove("active"));
+    document.querySelectorAll(".chip[data-owner]").forEach(c =>
+      c.classList.remove("active"));
+    const s = document.getElementById("search"); if(s) s.value = "";
+    updateOwnerFilterUI();
+    renderTasks();
+  });
+
+  safeBind("clearOwnerFilter", "click", ()=>{
+    activeOwner = null;
+    document.querySelectorAll(".chip[data-owner]").forEach(c =>
+      c.classList.remove("active"));
+    updateOwnerFilterUI();
+    renderTasks();
+  });
+
+  safeBind("clearAllFilters", "click", ()=>{
+    activeStatus = null;
+    activeOwner  = null;
+    activeHwCat  = null;
+    activeDocTipo = null;
+    sortBy = "due"; sortDir = "asc";
+    const ss = document.getElementById("sortSelect"); if(ss) ss.value = "due";
+    const sd = document.getElementById("sortDirBtn"); if(sd) sd.textContent = "↑";
+    document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
+    const s = document.getElementById("search"); if(s) s.value = "";
+    updateOwnerFilterUI();
+    renderTasks();
+  });
+
+  safeBind("hwClear", "click", ()=>{
+    activeHwCat = null;
+    document.querySelectorAll("#hwFilterChips .chip").forEach(c =>
+      c.classList.remove("active"));
+    renderHW();
+  });
+
+  safeBind("modalBg", "click", e=>{
+    if(e.target === document.getElementById("modalBg")) closeModal();
+  });
+  safeBind("hwModalBg", "click", e=>{
+    if(e.target === document.getElementById("hwModalBg")) closeHwModal();
+  });
+  safeBind("hwEditBg", "click", e=>{
+    if(e.target === document.getElementById("hwEditBg")) closeHwEdit();
+  });
+  safeBind("exportBg", "click", e=>{
+    if(e.target === document.getElementById("exportBg"))
+      document.getElementById("exportBg").classList.remove("open");
+  });
+  document.addEventListener("keydown", e=>{
+    if(e.key === "Escape"){
+      closeModal(); closeHwModal(); closeHwEdit();
+      closeDocEdit(); closeDocModal();
+      const ex = document.getElementById("exportBg");
+      if(ex) ex.classList.remove("open");
+    }
+  });
+  safeBind("summaryBg", "click", e=>{
+    if(e.target === document.getElementById("summaryBg"))
+      document.getElementById("summaryBg").classList.remove("open");
+  });
+}
+
+/* ============================================================
+   RIEPILOGO VETTORIALE + TESTO
+   ============================================================ */
+function buildSummaryData(){
+  const today = new Date();
+  const dateStr = today.toLocaleDateString("it-IT",
+    {weekday:"long", day:"2-digit", month:"long", year:"numeric"});
+
+  const byCat = {}, byMod = {};
+  HW.forEach(h => {
+    const c = h.categoria || "—"; byCat[c] = (byCat[c]||0) + 1;
+    const m = h.modello || "—";   byMod[m] = (byMod[m]||0) + 1;
+  });
+
+  function countAttr(field){
+    let yes=0, no=0, other=0;
+    HW.forEach(h => {
+      const v = String(h[field]||"").toUpperCase().trim();
+      if(v==="YES" || v.startsWith("YES") || v==="SI" || v==="SÌ") yes++;
+      else if(v==="NO") no++;
+      else other++;
+    });
+    return {yes, no, other};
+  }
+  const attr = {
+    montato: countAttr("montato"),
+    colla:   countAttr("colla"),
+    heaters: countAttr("heaters"),
+    cablato: countAttr("cablato"),
+    funz:    countAttr("funzionali")
+  };
+
+  const byStatus = {};
+  STATUS_CYCLE.forEach(s => byStatus[s] = tasks.filter(t=>t.status===s).length);
+
+  const inProgress = tasks.filter(t => t.status==="In corso")
+    .sort((a,b)=>weekSortKey(a.week||"").localeCompare(weekSortKey(b.week||"")));
+  const todo = tasks.filter(t => t.status==="Da fare")
+    .sort((a,b)=>weekSortKey(a.week||"").localeCompare(weekSortKey(b.week||"")));
+  const blocked = tasks.filter(t => t.status==="Blocked" || t.status==="TBD");
+
+  return { dateStr, byCat, byMod, attr, byStatus,
+           inProgress, todo, blocked };
+}
+
+function buildSummaryText(){
+  const d = buildSummaryData();
+  const lines = [];
+
+  lines.push(`📊 RIEPILOGO IOS PNRR · AIT giunti EM/EQM`);
+  lines.push(`${d.dateStr}`);
+  lines.push(``);
+
+  lines.push(`━━━━━ 🔧 HARDWARE (${HW.length}) ━━━━━`);
+  lines.push(`Per categoria: ` + Object.entries(d.byCat).map(([k,v])=>`${k}: ${v}`).join(" · "));
+  lines.push(`Per modello:   ` + Object.entries(d.byMod).map(([k,v])=>`${k}: ${v}`).join(" · "));
+  lines.push(``);
+  lines.push(`Stato integrazione (aggregato):`);
+  lines.push(`  🔧 Montato:     ✅ ${d.attr.montato.yes}  ⏳ ${d.attr.montato.other}  ❌ ${d.attr.montato.no}`);
+  lines.push(`  🧴 Colla:       ✅ ${d.attr.colla.yes}  ⏳ ${d.attr.colla.other}  ❌ ${d.attr.colla.no}`);
+  lines.push(`  🔥 Heaters:     ✅ ${d.attr.heaters.yes}  ⏳ ${d.attr.heaters.other}  ❌ ${d.attr.heaters.no}`);
+  lines.push(`  🔌 Cablato:     ✅ ${d.attr.cablato.yes}  ⏳ ${d.attr.cablato.other}  ❌ ${d.attr.cablato.no}`);
+  lines.push(`  ⚙️  Funzionali:  ✅ ${d.attr.funz.yes}  ⏳ ${d.attr.funz.other}  ❌ ${d.attr.funz.no}`);
+  lines.push(``);
+
+  if(HW.length){
+    lines.push(`━━━━━ 🔍 HARDWARE — DETTAGLIO (${HW.length}) ━━━━━`);
+
+    const sortedHW = HW.slice().sort((a,b) => {
+      const ca = DEFAULT_CATEGORIES.indexOf(a.categoria);
+      const cb = DEFAULT_CATEGORIES.indexOf(b.categoria);
+      const ia = ca >= 0 ? ca : 99;
+      const ib = cb >= 0 ? cb : 99;
+      if(ia !== ib) return ia - ib;
+      if((a.categoria||"") !== (b.categoria||""))
+        return (a.categoria||"").localeCompare(b.categoria||"");
+      return (a.id||"").localeCompare(b.id||"");
+    });
+
+    let currentCat = null;
+    sortedHW.forEach(h => {
+      if(h.categoria !== currentCat){
+        currentCat = h.categoria;
+        lines.push(``);
+        lines.push(`  ▸ ${currentCat || "Senza categoria"}`);
+      }
+      const idLine = `    ${h.id}${h.nome && h.nome !== h.id ? " · " + h.nome : ""}`;
+      const subLine = [
+        h.modello ? `Modello ${h.modello}` : "",
+        h.sn && h.sn !== "-" ? `SN ${h.sn}` : ""
+      ].filter(Boolean).join(" · ");
+      lines.push(idLine);
+      if(subLine) lines.push(`      ${subLine}`);
+
+      const flags = [];
+      if(h.montato && h.montato !== "-") flags.push(`Montato: ${h.montato}`);
+      if(h.colla && h.colla !== "-") flags.push(`Colla: ${h.colla}`);
+      if(h.heaters && h.heaters !== "-") flags.push(`Heater: ${h.heaters}`);
+      if(h.cablato && h.cablato !== "-") flags.push(`Cablato: ${h.cablato}`);
+      if(h.funzionali && h.funzionali !== "-") flags.push(`Funzionali: ${h.funzionali}`);
+      if(flags.length) lines.push(`      ${flags.join("  ·  ")}`);
+
+      if(h.qualifica) lines.push(`      🏆 ${h.qualifica}`);
+
+      const custom = (h.custom||[]).filter(c => c.name && c.value);
+      if(custom.length){
+        lines.push(`      ` + custom.map(c => `${c.name}: ${c.value}`).join("  ·  "));
+      }
+
+      if(h.notes){
+        const noteShort = h.notes.length > 90 ? h.notes.substring(0, 89) + "…" : h.notes;
+        lines.push(`      📝 ${noteShort}`);
+      }
+    });
+    lines.push(``);
+  }
+
+  lines.push(`━━━━━ 🗂️  ATTIVITÀ (${tasks.length}) ━━━━━`);
+  STATUS_CYCLE.forEach(s => {
+    lines.push(`  ${STATUS_ICON[s]} ${s}: ${d.byStatus[s]||0}`);
+  });
+  lines.push(``);
+
+  if(d.inProgress.length){
+    lines.push(`━━━━━ 🟡 IN CORSO (${d.inProgress.length}) ━━━━━`);
+    d.inProgress.forEach(t => {
+      const due = t.due ? ` · 📅 ${fmtDate(t.due)}` : "";
+      lines.push(`  • ${t.desc}`);
+      lines.push(`    👤 ${t.owner||"—"}  ·  🗓️  ${t.week||"—"}${due}`);
+      if(t.hw && t.hw.length) lines.push(`    🔧 ${t.hw.join(" · ")}`);
+    });
+    lines.push(``);
+  }
+
+  if(d.todo.length){
+    lines.push(`━━━━━ 🔴 DA FARE (${d.todo.length}) ━━━━━`);
+    d.todo.forEach(t => {
+      const due = t.due ? ` · 📅 ${fmtDate(t.due)}` : "";
+      lines.push(`  • ${t.desc}`);
+      lines.push(`    👤 ${t.owner||"—"}  ·  🗓️  ${t.week||"—"}${due}`);
+      if(t.hw && t.hw.length) lines.push(`    🔧 ${t.hw.join(" · ")}`);
+    });
+    lines.push(``);
+  }
+
+  if(d.blocked.length){
+    lines.push(`━━━━━ 🟠 BLOCCATE / TBD (${d.blocked.length}) ━━━━`);
+    d.blocked.forEach(t => {
+      lines.push(`  • ${t.desc}  —  👤 ${t.owner||"—"}`);
+    });
+  }
+
+  return lines.join("\n");
+}
+
+function buildSummarySVG(){
+  const d = buildSummaryData();
+  const W = 940;
+  const PAD = 30;
+
+  const svgEsc = (s) => String(s||"").replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+  const trunc = (s, n) => {
+    s = String(s||"");
+    return s.length > n ? s.substring(0, n-1) + "…" : s;
+  };
+
+  let y = 100;
+  const blocks = [];
+
+  blocks.push(`<rect x="0" y="0" width="${W}" height="80" fill="url(#hdr)"/>`);
+  blocks.push(`<text x="${PAD}" y="42" fill="#ffffff" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="700">📊 IOS PNRR · Riepilogo AIT giunti EM/EQM</text>`);
+  blocks.push(`<text x="${PAD}" y="64" fill="#c7d2fe" font-family="Segoe UI,Arial,sans-serif" font-size="13">${svgEsc(d.dateStr)}</text>`);
+
+  blocks.push(`<text x="${PAD}" y="${y}" fill="#1e293b" font-family="Segoe UI,Arial,sans-serif" font-size="15" font-weight="700">🔧 HARDWARE — Sintesi (${HW.length})</text>`);
+  y += 24;
+  const boxH = 130;
+  blocks.push(`<rect x="${PAD}" y="${y}" width="${W - PAD*2}" height="${boxH}" rx="10" fill="#f1f5f9" stroke="#e5e9f0"/>`);
+  let yy = y + 22;
+  blocks.push(`<text x="${PAD+16}" y="${yy}" fill="#475569" font-family="Segoe UI,Arial,sans-serif" font-size="12" font-weight="600">Per categoria</text>`);
+  yy += 18;
+  Object.entries(d.byCat).forEach(([k,v], i) => {
+    const x = PAD + 16 + i*160;
+    blocks.push(`<circle cx="${x+6}" cy="${yy-4}" r="5" fill="${categoryColor(k)}"/>`);
+    blocks.push(`<text x="${x+18}" y="${yy}" fill="#1e293b" font-family="Segoe UI,Arial,sans-serif" font-size="13" font-weight="600">${svgEsc(k)}: <tspan font-weight="800">${v}</tspan></text>`);
+  });
+  yy += 22;
+  blocks.push(`<text x="${PAD+16}" y="${yy}" fill="#475569" font-family="Segoe UI,Arial,sans-serif" font-size="12" font-weight="600">Per modello</text>`);
+  yy += 18;
+  Object.entries(d.byMod).forEach(([k,v], i) => {
+    const x = PAD + 16 + i*160;
+    blocks.push(`<text x="${x}" y="${yy}" fill="#1e293b" font-family="Segoe UI,Arial,sans-serif" font-size="13" font-weight="600">${svgEsc(k)}: <tspan font-weight="800">${v}</tspan></text>`);
+  });
+  yy += 22;
+  const cells = [
+    {label:"Montato",  v:d.attr.montato},
+    {label:"Colla",    v:d.attr.colla},
+    {label:"Heaters",  v:d.attr.heaters},
+    {label:"Cablato",  v:d.attr.cablato},
+    {label:"Funzionali", v:d.attr.funz}
+  ];
+  cells.forEach((c, i) => {
+    const x = PAD + 16 + i*170;
+    blocks.push(`<text x="${x}" y="${yy}" fill="#475569" font-family="Segoe UI,Arial,sans-serif" font-size="11.5" font-weight="600">${c.label}</text>`);
+    blocks.push(`<text x="${x}" y="${yy+15}" font-family="Segoe UI,Arial,sans-serif" font-size="12.5" font-weight="700">` +
+      `<tspan fill="#16a34a">✔ ${c.v.yes}</tspan>` +
+      `<tspan fill="#94a3b8">  ⏳ ${c.v.other}</tspan>` +
+      `<tspan fill="#dc2626">  ✖ ${c.v.no}</tspan>` +
+    `</text>`);
+  });
+  y += boxH + 24;
+
+  if(HW.length){
+    blocks.push(`<text x="${PAD}" y="${y}" fill="#1e293b" font-family="Segoe UI,Arial,sans-serif" font-size="15" font-weight="700">🔍 Dettaglio componenti (${HW.length})</text>`);
+    y += 24;
+
+    const sortedHW = HW.slice().sort((a,b) => {
+      const ca = DEFAULT_CATEGORIES.indexOf(a.categoria);
+      const cb = DEFAULT_CATEGORIES.indexOf(b.categoria);
+      const ia = ca >= 0 ? ca : 99;
+      const ib = cb >= 0 ? cb : 99;
+      if(ia !== ib) return ia - ib;
+      if((a.categoria||"") !== (b.categoria||""))
+        return (a.categoria||"").localeCompare(b.categoria||"");
+      return (a.id||"").localeCompare(b.id||"");
+    });
+
+    const rowH = 34;
+    blocks.push(`<rect x="${PAD}" y="${y}" width="${W - PAD*2}" height="${rowH}" fill="#e2e8f0" rx="6"/>`);
+    blocks.push(`<text x="${PAD+12}" y="${y+22}" fill="#334155" font-family="Segoe UI,Arial,sans-serif" font-size="11.5" font-weight="700" letter-spacing="0.5">ID</text>`);
+    blocks.push(`<text x="${PAD+90}" y="${y+22}" fill="#334155" font-family="Segoe UI,Arial,sans-serif" font-size="11.5" font-weight="700" letter-spacing="0.5">NOME</text>`);
+    blocks.push(`<text x="${PAD+280}" y="${y+22}" fill="#334155" font-family="Segoe UI,Arial,sans-serif" font-size="11.5" font-weight="700" letter-spacing="0.5">SN</text>`);
+    blocks.push(`<text x="${PAD+390}" y="${y+22}" fill="#334155" font-family="Segoe UI,Arial,sans-serif" font-size="11.5" font-weight="700" letter-spacing="0.5">MOD</text>`);
+    blocks.push(`<text x="${PAD+445}" y="${y+22}" fill="#334155" font-family="Segoe UI,Arial,sans-serif" font-size="11.5" font-weight="700" letter-spacing="0.5">MONTATO</text>`);
+    blocks.push(`<text x="${PAD+540}" y="${y+22}" fill="#334155" font-family="Segoe UI,Arial,sans-serif" font-size="11.5" font-weight="700" letter-spacing="0.5">COLLA</text>`);
+    blocks.push(`<text x="${PAD+610}" y="${y+22}" fill="#334155" font-family="Segoe UI,Arial,sans-serif" font-size="11.5" font-weight="700" letter-spacing="0.5">HEATER</text>`);
+    blocks.push(`<text x="${PAD+685}" y="${y+22}" fill="#334155" font-family="Segoe UI,Arial,sans-serif" font-size="11.5" font-weight="700" letter-spacing="0.5">CABLATO</text>`);
+    blocks.push(`<text x="${PAD+765}" y="${y+22}" fill="#334155" font-family="Segoe UI,Arial,sans-serif" font-size="11.5" font-weight="700" letter-spacing="0.5">FUNZ</text>`);
+    y += rowH;
+
+    sortedHW.forEach((h, idx) => {
+      const bg = idx % 2 === 0 ? "#ffffff" : "#f8fafc";
+      blocks.push(`<rect x="${PAD}" y="${y}" width="${W - PAD*2}" height="${rowH}" fill="${bg}" stroke="#eef1f6"/>`);
+      const color = categoryColor(h.categoria);
+      blocks.push(`<circle cx="${PAD+6}" cy="${y+rowH/2}" r="4" fill="${color}"/>`);
+      blocks.push(`<text x="${PAD+16}" y="${y+22}" fill="#1e293b" font-family="Consolas,monospace" font-size="12" font-weight="700">${svgEsc(trunc(h.id,10))}</text>`);
+      blocks.push(`<text x="${PAD+90}" y="${y+22}" fill="#334155" font-family="Segoe UI,Arial,sans-serif" font-size="12" font-weight="600">${svgEsc(trunc(h.nome, 30))}</text>`);
+      blocks.push(`<text x="${PAD+280}" y="${y+22}" fill="#64748b" font-family="Consolas,monospace" font-size="11">${svgEsc(trunc(h.sn||"—", 12))}</text>`);
+      blocks.push(`<text x="${PAD+390}" y="${y+22}" fill="#475569" font-family="Segoe UI,Arial,sans-serif" font-size="11.5" font-weight="600">${svgEsc(h.modello||"—")}</text>`);
+
+      function flagCell(x, val){
+        const s = String(val||"").toUpperCase().trim();
+        let color = "#94a3b8";
+        let icon = "—";
+        if(s === "YES" || s.startsWith("YES") || s === "SI" || s === "SÌ"){ color = "#16a34a"; icon = "✔"; }
+        else if(s === "NO"){ color = "#dc2626"; icon = "✖"; }
+        else if(s.includes("ON") || s.includes("CORSO")){ color = "#d97706"; icon = "⏳"; }
+        else if(s === "-" || s === "N/A" || s === ""){ color = "#cbd5e1"; icon = "—"; }
+        else { color = "#d97706"; icon = "•"; }
+        blocks.push(`<text x="${x}" y="${y+22}" fill="${color}" font-family="Segoe UI,Arial,sans-serif" font-size="13" font-weight="800">${icon}</text>`);
+      }
+      flagCell(PAD+455, h.montato);
+      flagCell(PAD+555, h.colla);
+      flagCell(PAD+622, h.heaters);
+      flagCell(PAD+697, h.cablato);
+      flagCell(PAD+775, h.funzionali);
+
+      y += rowH;
+    });
+    y += 20;
+  }
+
+  blocks.push(`<text x="${PAD}" y="${y}" fill="#1e293b" font-family="Segoe UI,Arial,sans-serif" font-size="15" font-weight="700">🗂️  ATTIVITÀ — ${tasks.length} totali</text>`);
+  y += 24;
+  const statusBoxH = 70;
+  blocks.push(`<rect x="${PAD}" y="${y}" width="${W - PAD*2}" height="${statusBoxH}" rx="10" fill="#f1f5f9" stroke="#e5e9f0"/>`);
+  const cellW = (W - PAD*2) / STATUS_CYCLE.length;
+  STATUS_CYCLE.forEach((s, i) => {
+    const x = PAD + i*cellW + cellW/2;
+    blocks.push(`<text x="${x}" y="${y+28}" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="800" fill="#1e293b">${d.byStatus[s]||0}</text>`);
+    blocks.push(`<text x="${x}" y="${y+48}" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="12" font-weight="600" fill="#475569">${STATUS_ICON[s]} ${svgEsc(s)}</text>`);
+  });
+  y += statusBoxH + 24;
+
+  if(d.inProgress.length){
+    blocks.push(`<text x="${PAD}" y="${y}" fill="#ca8a04" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="700">🟡 In corso (${d.inProgress.length})</text>`);
+    y += 20;
+    d.inProgress.forEach(t => {
+      blocks.push(`<text x="${PAD+12}" y="${y}" fill="#1e293b" font-family="Segoe UI,Arial,sans-serif" font-size="12.5" font-weight="600">• ${svgEsc(trunc(t.desc, 75))}</text>`);
+      blocks.push(`<text x="${PAD+24}" y="${y+15}" fill="#64748b" font-family="Segoe UI,Arial,sans-serif" font-size="11">👤 ${svgEsc(t.owner||"—")} · 🗓️  ${svgEsc(t.week||"—")}${t.due?` · 📅 ${svgEsc(fmtDate(t.due))}`:""}</text>`);
+      y += 32;
+    });
+    y += 8;
+  }
+
+  if(d.todo.length){
+    blocks.push(`<text x="${PAD}" y="${y}" fill="#dc2626" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="700">🔴 Da fare (${d.todo.length})</text>`);
+    y += 20;
+    d.todo.forEach(t => {
+      blocks.push(`<text x="${PAD+12}" y="${y}" fill="#1e293b" font-family="Segoe UI,Arial,sans-serif" font-size="12.5" font-weight="600">• ${svgEsc(trunc(t.desc, 75))}</text>`);
+      blocks.push(`<text x="${PAD+24}" y="${y+15}" fill="#64748b" font-family="Segoe UI,Arial,sans-serif" font-size="11">👤 ${svgEsc(t.owner||"—")} · 🗓️  ${svgEsc(t.week||"—")}${t.due?` · 📅 ${svgEsc(fmtDate(t.due))}`:""}</text>`);
+      y += 32;
+    });
+  }
+
+  const H = y + 20;
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
+    <defs>
+      <linearGradient id="hdr" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#1e1b4b"/>
+        <stop offset="50%" stop-color="#312e81"/>
+        <stop offset="100%" stop-color="#4338ca"/>
+      </linearGradient>
+    </defs>
+    <rect width="${W}" height="${H}" fill="#ffffff"/>
+    ${blocks.join("\n    ")}
+  </svg>`;
+
+  return svg;
+}
+
+function openSummaryModal(){
+  const txt = buildSummaryText();
+  const svg = buildSummarySVG();
+  document.getElementById("sumText").value = txt;
+  document.getElementById("sumPreview").innerHTML = svg;
+  document.getElementById("summaryBg").classList.add("open");
+}
+
+function summaryCopyText(){
+  const el = document.getElementById("sumText");
+  el.select();
+  el.setSelectionRange(0, 999999);
+  try{
+    document.execCommand("copy");
+    toast("📋 Riepilogo copiato negli appunti");
+  }catch(e){
+    navigator.clipboard.writeText(el.value).then(
+      ()=>toast("📋 Riepilogo copiato"),
+      ()=>toast("⚠️ Copia manuale: seleziona il testo")
+    );
+  }
+  window.getSelection().removeAllRanges();
+}
+
+function summaryDownloadSVG(){
+  const svg = buildSummarySVG();
+  const blob = new Blob([svg], {type:"image/svg+xml;charset=utf-8"});
+  const a = document.createElement("a");
+  const d = new Date().toISOString().slice(0,10);
+  a.href = URL.createObjectURL(blob);
+  a.download = `riepilogo_ios_pnrr_${d}.svg`;
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+  toast("📦 SVG scaricato");
+}
+
+async function summaryDownloadPNG(){
+  const svg = buildSummarySVG();
+  const m = svg.match(/width="(\d+)" height="(\d+)"/);
+  if(!m){ toast("⚠️ Errore generazione PNG"); return; }
+  const w = parseInt(m[1], 10);
+  const h = parseInt(m[2], 10);
+
+  const blob = new Blob([svg], {type:"image/svg+xml;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.createElement("canvas");
+    const scale = 2;
+    canvas.width = w * scale;
+    canvas.height = h * scale;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.scale(scale, scale);
+    ctx.drawImage(img, 0, 0, w, h);
+    canvas.toBlob(b => {
+      const a = document.createElement("a");
+      const d = new Date().toISOString().slice(0,10);
+      a.href = URL.createObjectURL(b);
+      a.download = `riepilogo_ios_pnrr_${d}.png`;
+      a.click();
+      setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+      toast("📦 PNG scaricato");
+    }, "image/png");
+    URL.revokeObjectURL(url);
+  };
+  img.onerror = () => {
+    URL.revokeObjectURL(url);
+    toast("⚠️ Impossibile generare PNG — scarica SVG");
+  };
+  img.src = url;
+}
+
+/* ============================================================
+   AVVISO ALLA CHIUSURA
+   ============================================================ */
+window.addEventListener("beforeunload", (e)=>{
+  if(!folderHandle && unsavedChanges > 0){
+    e.preventDefault();
+    e.returnValue = "";
+    return "";
+  }
+});
+
+/* ============================================================
+   PROVA PERIODICA DI RICONNESSIONE
+   ============================================================ */
+setInterval(async ()=>{
+  if(HW.length === 0 && tasks.length === 0 && docs.length === 0) return;
+  if(folderHandle) return;
+  const saved = await idbGet(FOLDER_KEY);
+  if(!saved) return;
+  try{
+    const ok = await verifyPermission(saved, false);
+    if(ok){
+      folderHandle = saved;
+      const r = await saveToFolder();
+      if(r.ok){
+        lastSavedToCsv = Date.now();
+        unsavedChanges = 0;
+        showSaveIndicator("saved", "🔗 Riconnesso — CSV aggiornati");
+        updateDatasource();
+      }
+    }
+  }catch(e){}
+}, 60000);
+
+/* ============================================================
+   INIT
+   ============================================================ */
+(async function init(){
+  applyTheme(localStorage.getItem(THEME_KEY) || "light");
+  bindEvents();
+  bindToggles();
+
+  const restored = await tryRestoreFolder();
+  if(restored === true){
+    renderAll();
+    toast(`📁 Cartella "${folderHandle.name}" ripristinata`);
+    return;
+  }
+
+  if(loadFromStorage()){
+    renderAll();
+    if(restored === "need-click"){
+      setTimeout(()=>{
+        showReconnectBanner();
+        showSaveIndicator("warn", "💡 Ricollega la cartella per auto-salvare i CSV");
+      }, 600);
+    }
+    return;
+  }
+
+  if(restored === "need-click"){
+    renderAll();
+    setTimeout(()=>{ showReconnectBanner(); }, 600);
+    return;
+  }
+
+  renderAll();
+})();
+
+</script>
+</body>
+</html>
