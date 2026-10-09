@@ -979,14 +979,21 @@ async function readFileIfExists(dir, name){
   }catch(e){ return null; }
 }
 
-async function loadFromFolder(){
-  if(!folderHandle) return {ok:false, reason:"no-folder"};
-  const hwText    = await readFileIfExists(folderHandle, "hardware.csv");
-  const taskText  = await readFileIfExists(folderHandle, "attivita.csv");
-  const docText   = await readFileIfExists(folderHandle, "documenti.csv");
+async function loadFromRepo(){
+  const ts = Date.now();   // cache-busting per avere dati freschi
+  async function readFile(name){
+    try{
+      const res = await fetch(`./data/${name}?t=${ts}`, {cache: "no-store"});
+      if(!res.ok) return null;
+      return await res.text();
+    }catch(e){ return null; }
+  }
+
+  const hwText   = await readFile("hardware.csv");
+  const taskText = await readFile("attivita.csv");
+  const docText  = await readFile("documenti.csv");
 
   const found = {hw: hwText!==null, task: taskText!==null, doc: docText!==null};
-
   if(!found.hw && !found.task && !found.doc){
     return {ok:false, reason:"empty"};
   }
@@ -998,85 +1005,19 @@ async function loadFromFolder(){
   return {ok:true, found};
 }
 
-async function linkFolder(){
-  if(!('showDirectoryPicker' in window)){
-    alert("Il browser non supporta la selezione di cartelle.\n\n" +
-          "Usa Chrome o Edge.");
-    return false;
-  }
-
-  const proceed = confirm(
-    "Seleziona la cartella di progetto:\n\n" +
-    "P:\\Spazio\\IOS PNRR\\ENG\\Utils\\Gestionale_IOS\n\n" +
-    "La cartella verrà aperta in SOLA LETTURA.\nProcedere?"
-  );
-  if(!proceed) return false;
-
-  let dir;
-  try{
-    dir = await window.showDirectoryPicker({mode: "read"});
-  }catch(e){
-    if(e.name === "AbortError") return false;
-    console.error("linkFolder picker:", e);
-    toast("⚠️ Errore apertura picker");
-    return false;
-  }
-
-  /* Verifica file attesi */
-  const missing = [];
-  for(const name of EXPECTED_FILES){
-    try{ await dir.getFileHandle(name); }
-    catch(e){ missing.push(name); }
-  }
-
-  if(missing.length === EXPECTED_FILES.length){
-    const ok = confirm(
-      `⚠️ Nella cartella "${dir.name}" non trovo nessuno dei file attesi\n` +
-      `(hardware.csv, attivita.csv, documenti.csv).\n\n` +
-      `Sei sicuro di aver scelto la cartella giusta?\n` +
-      `P:\\Spazio\\IOS PNRR\\ENG\\Utils\\Gestionale_IOS\n\n` +
-      `Procedere comunque?`
-    );
-    if(!ok) return false;
-  } else if(missing.length > 0){
-    toast(`⚠️ File mancanti: ${missing.join(", ")}`, 4000);
-  }
-
-  /* Salva l'handle anche se la lettura fallisce */
-  folderHandle = dir;
-  await idbSet(FOLDER_KEY, dir);
-
-  const r = await loadFromFolder();
+async function manualRefresh(){
+  const r = await loadFromRepo();
   if(r.ok){
     renderAll();
-    toast(`📁 "${dir.name}" collegata · ${HW.length} HW · ${tasks.length} attività · ${docs.length} documenti`);
-    return true;
+    toast(`🔄 Aggiornato · ${HW.length} HW · ${tasks.length} attività · ${docs.length} documenti`);
+  } else {
+    toast("⚠️ Nessun CSV trovato nella repo");
   }
-  if(r.reason === "empty"){
-    toast("⚠️ Cartella collegata ma nessun CSV trovato", 4000);
-    renderAll();
-    return true;
-  }
-  toast("⚠️ Errore lettura cartella", 4000);
-  return false;
 }
 
 async function tryRestoreFolder(){
-  if(!('showDirectoryPicker' in window)) return false;
-  const saved = await idbGet(FOLDER_KEY);
-  if(!saved) return false;
-  try{
-    const ok = await verifyReadPermission(saved, false);
-    if(!ok){
-      savedFolderHandle = saved;
-      return "need-click";
-    }
-    folderHandle = saved;
-    const r = await loadFromFolder();
-    return r.ok ? true : "need-click";
-  }catch(e){
-    return false;
-  }
+  const r = await loadFromRepo();
+  return r.ok ? true : false;
 }
 
 async function reconnectFolder(){
@@ -1151,31 +1092,16 @@ function updateDatasource(){
   const dot = document.getElementById("dsDot");
   const txt = document.getElementById("dsText");
   const chipSave = document.getElementById("chipSave");
-  const emptyState = document.getElementById("emptyState");
-  const btnFolder = document.getElementById("btnFolder");
   const btnRefresh = document.getElementById("btnRefresh");
 
   const hasData = HW.length > 0 || tasks.length > 0 || docs.length > 0;
   const stats = `<b>${HW.length} HW</b> · <b>${tasks.length} attività</b> · <b>${docs.length} documenti</b>`;
 
-  if(folderHandle){
-    dot.className = "dot ok";
-    txt.innerHTML = hasData ? stats : "Cartella collegata (nessun dato)";
-    chipSave.className = "ds-chip";
-    chipSave.textContent = `🔒 ${folderHandle.name} · sola lettura`;
-    emptyState.style.display = "none";
-    btnFolder.style.display = "none";
-    btnRefresh.style.display = "inline-flex";
-  } else {
-    dot.className = "dot warn";
-    txt.innerHTML = hasData ? stats : "Nessuna cartella collegata";
-    chipSave.className = "ds-chip warn";
-    chipSave.textContent = "🔒 Sola lettura — cartella non collegata";
-    emptyState.style.display = hasData ? "none" : "block";
-    btnFolder.style.display = "inline-flex";
-    btnFolder.textContent = "📁 Connetti a Gestionale_IOS";
-    btnRefresh.style.display = "none";
-  }
+  dot.className = hasData ? "dot ok" : "dot warn";
+  txt.innerHTML = hasData ? stats : "Nessun dato nella repo";
+  chipSave.className = "ds-chip";
+  chipSave.textContent = "🔒 Sola lettura · GitHub";
+  if(btnRefresh) btnRefresh.style.display = "inline-flex";
   updateLastUpdate();
 }
 
@@ -2420,15 +2346,9 @@ function bindEvents(){
    AUTO-REFRESH PERIODICO
    ============================================================ */
 setInterval(async ()=>{
-  if(!folderHandle) return;
   try{
-    const ok = await verifyReadPermission(folderHandle, false);
-    if(!ok) return;
-    const r = await loadFromFolder();
-    if(r.ok){
-      renderAll();
-      /* aggiornamento silenzioso: nessun toast */
-    }
+    const r = await loadFromRepo();
+    if(r.ok) renderAll();
   }catch(e){}
 }, REFRESH_MS);
 
@@ -2438,22 +2358,7 @@ setInterval(async ()=>{
 (async function init(){
   applyTheme(localStorage.getItem(THEME_KEY) || "light");
   bindEvents();
-
-  const restored = await tryRestoreFolder();
-  if(restored === true){
-    renderAll();
-    toast(`📁 Cartella "${folderHandle.name}" ripristinata`);
-    return;
-  }
-
-  renderAll();
-
-  if(restored === "need-click"){
-    setTimeout(()=>{
-      showReconnectBanner();
-      toast("💡 Clicca 'Ricollega' per accedere ai CSV", 4000);
-    }, 600);
-  }
+  await manualRefresh();   // carica subito
 })();
 </script>
 </body>
